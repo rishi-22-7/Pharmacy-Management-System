@@ -1,0 +1,16 @@
+# Ignore environment variables and database credentials
+.env
+
+# Ignore any local, heavy database files (if you used SQLite locally)
+*.db
+*.sqlite
+*.sqlite3
+
+# Ignore OS junk files
+.DS_Store
+Thumbs.db
+
+# (Optional) If you built the portals using Python or Node, leave these:
+venv/
+__pycache__/
+node_modules/

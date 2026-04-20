@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Secure staff login portal for Pulse Pharmacy Management System." />
+  <title>Login — Pulse Pharmacy</title>
+
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="icon" href="{{ url_for('static', filename='images/favicon.png') }}" type="image/png">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <!-- Design System CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+
+  <style>
+    /* Password field wrapper to position the eye icon */
+    .pw-wrapper {
+      position: relative;
+    }
+    .pw-wrapper input {
+      padding-right: 46px !important;
+    }
+    .pw-toggle {
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--text-muted);
+      font-size: 1.1rem;
+      padding: 0;
+      line-height: 1;
+      transition: color 0.15s;
+      display: flex;
+      align-items: center;
+    }
+    .pw-toggle:hover { color: var(--brand); }
+  </style>
+</head>
+<body>
+
+  <div class="login-page">
+    <div class="login-container">
+
+      <!-- Brand Header -->
+      <div class="login-header">
+        <span class="brand-icon">℞</span>
+        <h1>Pharmacy Management System</h1>
+      </div>
+
+      <!-- Flash Messages (Jinja2) -->
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <div class="flash-messages">
+            {% for category, message in messages %}
+              <div class="flash {{ category }}">{{ message }}</div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+
+      <!-- Login Form -->
+      <form id="login-form" method="POST" action="{{ url_for('login') }}" novalidate>
+
+        <!-- Role Selector — Pure CSS Segmented Control -->
+        <span class="role-selector-label">Select Your Role</span>
+        <div class="role-selector">
+          <input type="radio" id="role-admin"       name="login_role" value="Admin"      checked />
+          <label for="role-admin">Admin</label>
+
+          <input type="radio" id="role-manager"     name="login_role" value="Manager" />
+          <label for="role-manager">Manager</label>
+
+          <input type="radio" id="role-pharmacist"  name="login_role" value="Pharmacist" />
+          <label for="role-pharmacist">Pharmacist</label>
+        </div>
+
+        <!-- Staff ID -->
+        <div class="input-group">
+          <label for="staff_id">Staff ID</label>
+          <input
+            type="text"
+            id="staff_id"
+            name="staff_id"
+            placeholder="e.g. 1"
+            required
+            autofocus
+            autocomplete="username"
+          />
+        </div>
+
+        <!-- Password with show/hide toggle -->
+        <div class="input-group">
+          <label for="login_password">Password</label>
+          <div class="pw-wrapper">
+            <input
+              type="password"
+              id="login_password"
+              name="password"
+              placeholder="Enter your password"
+              required
+              autocomplete="current-password"
+            />
+            <button type="button" class="pw-toggle" onclick="togglePw('login_password', this)"
+                    aria-label="Show/hide password">
+              👁
+            </button>
+          </div>
+        </div>
+
+        <button type="submit" id="login-btn" class="btn-primary">
+          🔒 Secure Login
+        </button>
+
+      </form>
+
+      <!-- Footer -->
+      <div class="login-footer">
+        &copy; 2026 Pulse Pharmacy. All rights reserved.<br />
+        For access issues, contact your system administrator.
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    function togglePw(inputId, btn) {
+      const inp = document.getElementById(inputId);
+      if (inp.type === 'password') {
+        inp.type = 'text';
+        btn.textContent = '⌣';
+      } else {
+        inp.type = 'password';
+        btn.textContent = '👁';
+      }
+    }
+  </script>
+
+</body>
+</html>

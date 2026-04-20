@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Inventory & Restocking Management</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"/>
+  <link rel="icon" href="{{ url_for('static', filename='images/favicon.png') }}" type="image/png">
+  <style>
+    .sort-link { color: var(--text-muted); text-decoration: none; font-weight: 700; }
+    .sort-link:hover, .sort-link.active { color: var(--brand); }
+    .proc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start; }
+    @media (max-width: 900px) { .proc-grid { grid-template-columns: 1fr; } }
+    #restockModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; justify-content: center; align-items: center; }
+    #restockModal .modal-content { background: white; padding: 24px; border-radius: 8px; width: 90%; max-width: 600px; max-height: 80vh; overflow-y: auto; }
+  </style>
+</head>
+<body>
+
+<nav class="dash-nav">
+  <div class="nav-brand">📦 Inventory & Restocking</div>
+  <div class="nav-user">
+    <span>Logged in as <strong>{{ name }}</strong></span>
+    <a href="{{ url_for('profile') }}" class="btn-profile">👤 My Profile</a>
+    <a href="{{ url_for('logout') }}" class="btn-logout">⏻ Logout</a>
+  </div>
+</nav>
+
+<div class="admin-tabs">
+  <button id="tab-dashboard"   class="tab-btn" onclick="showTab('dashboard')">📊 Dashboard & Alerts</button>
+  <button id="tab-procurement" class="tab-btn" onclick="showTab('procurement')">📋 New Restock Order & Adding batch</button>
+  <button id="tab-history"     class="tab-btn" onclick="showTab('history')">🕐 Restock Order History</button>
+</div>
+
+<div class="dash-body">
+
+  <!-- Flash -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div style="margin-bottom:16px;">
+        {% for category, message in messages %}
+          <div class="flash {{ category }}" style="margin-bottom:8px;">{{ message }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+
+  <!-- ═══════════ TAB 1: DASHBOARD & ALERTS ═══════════ -->
+  <div id="section-dashboard" class="tab-section">
+
+    <!-- Live Stat Cards -->
+    <div class="stat-cards">
+      <div class="stat-card">
+        <div class="stat-label">Total Units In Stock</div>
+        <div class="stat-value">{{ total_stock }}</div>
+      </div>
+      <div class="stat-card danger">
+        <div class="stat-label">⚠ Low Stock Alerts</div>
+        <div class="stat-value">{{ low_stock|length }}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Restock Orders Placed</div>
+        <div class="stat-value">{{ pending_orders }}</div>
+      </div>
+    </div>
+
+    <!-- Low Stock Alert Panel -->
+    {% if low_stock %}
+    <div class="alert-panel">
+      <div class="alert-icon">🚨</div>
+      <div style="flex:1;">
+        <div class="alert-title">{{ low_stock|length }} Batch(es) Running Low (< 20 units)</div>
+        <div style="margin-top:10px;">
+          <table class="data-table" style="background:transparent;">
+            <thead><tr>
+              <th style="background:rgba(229,62,62,0.06);">Batch No.</th>
+              <th style="background:rgba(229,62,62,0.06);">Drug Name</th>
+              <th style="background:rgba(229,62,62,0.06);">Units Left</th>
+            </tr></thead>
+            <tbody>
+              {% for item in low_stock %}
+              <tr>
+                <td>{{ item.BatchNo }}</td>
+                <td>{{ item.Name }}</td>
+                <td style="color:var(--danger);font-weight:700;">{{ item.Qty_In_Stock }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Full Inventory Table -->
+    <div class="card">
+      <div class="card-title">
+        📊 Current Inventory Batches
+        <span style="font-size:0.8rem;color:var(--text-muted);margin-left:auto;">{{ batches|length }} batch(es)</span>
+      </div>
+      {% if batches %}
+      <table class="data-table">
+        <thead><tr>
+          <th>
+            <a class="sort-link {% if sort_inv=='BatchNo' %}active{% endif %}" href="{{ url_for('manager', tab='dashboard', sort_inv='BatchNo', order_inv='DESC' if sort_inv=='BatchNo' and order_inv=='ASC' else 'ASC') }}">
+              Batch No. {% if sort_inv=='BatchNo' %}{{ '▼' if order_inv=='DESC' else '▲' }}{% endif %}
+            </a>
+          </th>
+          <th>
+            <a class="sort-link {% if sort_inv=='Name' %}active{% endif %}" href="{{ url_for('manager', tab='dashboard', sort_inv='Name', order_inv='DESC' if sort_inv=='Name' and order_inv=='ASC' else 'ASC') }}">
+              Drug Name {% if sort_inv=='Name' %}{{ '▼' if order_inv=='DESC' else '▲' }}{% endif %}
+            </a>
+          </th>
+          <th>Barcode</th>
+          <th>
+            <a class="sort-link {% if sort_inv=='qty' %}active{% endif %}" href="{{ url_for('manager', tab='dashboard', sort_inv='qty', order_inv='DESC' if sort_inv=='qty' and order_inv=='ASC' else 'ASC') }}">
+              Qty {% if sort_inv=='qty' %}{{ '▼' if order_inv=='DESC' else '▲' }}{% endif %}
+            </a>
+          </th>
+          <th>Mfg. Date</th>
+          <th>
+            <a class="sort-link {% if sort_inv=='ExpDate' %}active{% endif %}" href="{{ url_for('manager', tab='dashboard', sort_inv='ExpDate', order_inv='DESC' if sort_inv=='ExpDate' and order_inv=='ASC' else 'ASC') }}">
+              Expiry {% if sort_inv=='ExpDate' %}{{ '▼' if order_inv=='DESC' else '▲' }}{% endif %}
+            </a>
+          </th>
+          <th>
+            <a class="sort-link {% if sort_inv=='price' %}active{% endif %}" href="{{ url_for('manager', tab='dashboard', sort_inv='price', order_inv='DESC' if sort_inv=='price' and order_inv=='ASC' else 'ASC') }}">
+              Unit Price {% if sort_inv=='price' %}{{ '▼' if order_inv=='DESC' else '▲' }}{% endif %}
+            </a>
+          </th>
+          <th>Status</th>
+        </tr></thead>
+        <tbody>
+          {% for b in batches %}
+          <tr>
+            <td><strong>{{ b.BatchNo }}</strong></td>
+            <td>{{ b.Name }}</td>
+            <td>{{ b.Barcode }}</td>
+            <td>{{ b.Qty_In_Stock }}</td>
+            <td>{{ b.Mfg_Date }}</td>
+            <td>{{ b.ExpDate }}</td>
+            <td>₹ {{ "%.2f"|format(b.Unit_Selling_Price) }}</td>
+            <td>
+              {% if b.Qty_In_Stock == 0 %}<span class="badge out">Out of Stock</span>
+              {% elif b.Qty_In_Stock < 20 %}<span class="badge low-stock">Low Stock</span>
+              {% else %}<span class="badge in-stock">In Stock</span>{% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+        <div style="text-align:center;padding:48px;color:var(--text-muted);">
+          <div style="font-size:2.5rem;margin-bottom:12px;">📭</div>
+          <p style="font-weight:600;">No inventory found. Use Procurement to add stock.</p>
+        </div>
+      {% endif %}
+    </div>
+  </div><!-- /dashboard -->
+
+
+  <!-- ═══════════ TAB 2: PROCUREMENT & ORDERS ═══════════ -->
+  <div id="section-procurement" class="tab-section" style="display:none;">
+    <div class="proc-grid">
+
+      <!-- Form 1: Place Restock Order -->
+      <div class="card">
+        <div class="card-title">📋 Place Restock Order</div>
+        <form method="POST" action="{{ url_for('manager_place_order') }}" id="restock-form">
+          <div class="form-group" style="margin-bottom:14px;">
+            <label>Supplier <span style="color:var(--danger);">*</span></label>
+            {% if supplier_list %}
+            <select name="company_id" required>
+              <option value="" disabled selected>Select supplier…</option>
+              {% for sup in supplier_list %}
+                <option value="{{ sup.Company_ID }}">{{ sup.Name }} (ID: {{ sup.Company_ID }})</option>
+              {% endfor %}
+            </select>
+            {% else %}
+            <p style="color:var(--danger);font-size:0.85rem;">⚠ No suppliers registered. Ask Admin to add one first.</p>
+            <input type="hidden" name="company_id" value=""/>
+            {% endif %}
+          </div>
+
+          <!-- Dynamic Item Rows -->
+          <div id="item-rows" style="margin-bottom:14px;">
+            <div class="item-row" style="display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:8px;align-items:end;margin-bottom:10px;">
+              <div class="form-group" style="margin:0;">
+                <label>Drug (Code & Name)</label>
+                <select name="barcode" required onchange="updateBarcodeField(this)">
+                  <option value="" disabled selected>Select medicine…</option>
+                  {% for med in medicines_list %}
+                  <option value="{{ med.Barcode }}">{{ med.Barcode }} — {{ med.Name }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="form-group" style="margin:0;">
+                <label>Qty</label>
+                <input type="number" name="qty_ordered" placeholder="200" min="1" required/>
+              </div>
+              <div class="form-group" style="margin:0;">
+                <label>Unit Cost (&#8377;)</label>
+                <input type="number" name="unit_cost" placeholder="8.50" step="0.01" min="0" required/>
+              </div>
+              <button type="button" onclick="removeRow(this)"
+                style="height:38px;margin-top:auto;background:var(--danger);color:#fff;border:none;border-radius:7px;padding:0 10px;cursor:pointer;font-weight:700;align-self:end;">✕</button>
+            </div>
+          </div>
+
+          <button type="button" id="add-item-btn"
+            style="background:rgba(43,108,176,0.08);color:var(--brand);border:1.5px dashed var(--brand);border-radius:8px;padding:8px 16px;cursor:pointer;font-weight:600;font-size:0.85rem;width:100%;margin-bottom:14px;"
+            onclick="addItemRow()">&#43; Add Another Drug</button>
+
+          <button type="submit" class="btn-action primary" style="width:100%;justify-content:center;">
+            &#128203; Place Restock Order
+          </button>
+        </form>
+      </div>
+
+      <!-- Form 2: Intake Delivery -->
+      <div class="card">
+        <div class="card-title">📥 Intake Delivery — Add to Shelf</div>
+        <form method="POST" action="{{ url_for('manager_intake_batch') }}">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
+            <div class="form-group">
+              <label>New Batch No.</label>
+              <input type="text" name="batch_no" placeholder="e.g. B-2601" required/>
+            </div>
+            <div class="form-group">
+              <label>Drug Barcode</label>
+              <input type="text" name="barcode" placeholder="e.g. MED001" required/>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
+            <div class="form-group">
+              <label>Mfg. Date</label>
+              <input type="date" name="mfg_date" required/>
+            </div>
+            <div class="form-group">
+              <label>Expiry Date</label>
+              <input type="date" name="exp_date" required/>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+            <div class="form-group">
+              <label>Quantity Received</label>
+              <input type="number" name="qty" placeholder="100" min="1" required/>
+            </div>
+            <div class="form-group">
+              <label>Selling Price (₹)</label>
+              <input type="number" name="price" placeholder="12.50" step="0.01" min="0" required/>
+            </div>
+          </div>
+          <button type="submit" class="btn-action secondary" style="width:100%;justify-content:center;">
+            📥 Add to Inventory
+          </button>
+        </form>
+      </div>
+
+    </div><!-- /proc-grid -->
+  </div><!-- /procurement -->
+
+
+  <!-- ═══════════ TAB 3: RESTOCK HISTORY ═══════════ -->
+  <div id="section-history" class="tab-section" style="display:none;">
+    <div class="card">
+      <div class="card-title">
+        🕐 Restock Order History
+        <span style="font-size:0.8rem;color:var(--text-muted);margin-left:auto;">{{ restock_history|length }} order(s)</span>
+      </div>
+      {% if restock_history %}
+      <table class="data-table">
+        <thead><tr>
+          <th>
+            <a class="sort-link {% if sort_orders=='Order_No' %}active{% endif %}" href="{{ url_for('manager', tab='history', sort_orders='Order_No', order_orders='DESC' if sort_orders=='Order_No' and order_orders=='ASC' else 'ASC') }}">
+              Order No. {% if sort_orders=='Order_No' %}{{ '▼' if order_orders=='DESC' else '▲' }}{% endif %}
+            </a>
+          </th>
+          <th>Supplier</th>
+          <th>
+            <a class="sort-link {% if sort_orders=='OrderDate' %}active{% endif %}" href="{{ url_for('manager', tab='history', sort_orders='OrderDate', order_orders='DESC' if sort_orders=='OrderDate' and order_orders=='ASC' else 'ASC') }}">
+              Order Date {% if sort_orders=='OrderDate' %}{{ '▼' if order_orders=='DESC' else '▲' }}{% endif %}
+            </a>
+          </th>
+          <th>Items</th>
+          <th>Total Qty</th>
+          <th>
+            <a class="sort-link {% if sort_orders=='OrderCost' %}active{% endif %}" href="{{ url_for('manager', tab='history', sort_orders='OrderCost', order_orders='DESC' if sort_orders=='OrderCost' and order_orders=='ASC' else 'ASC') }}">
+              Order Cost {% if sort_orders=='OrderCost' %}{{ '▼' if order_orders=='DESC' else '▲' }}{% endif %}
+            </a>
+          </th>
+        </tr></thead>
+        <tbody>
+          {% for o in restock_history %}
+          <tr>
+            <td>
+              <a href="#" onclick="openRestockModal('{{ o.Order_No }}'); return false;"
+                 style="color:var(--brand);font-weight:800;text-decoration:none;">
+                #{{ o.Order_No }}
+              </a>
+            </td>
+            <td>{{ o.SupplierName }}</td>
+            <td>{{ o.OrderDate }}</td>
+            <td>{{ o.item_count }} drug(s)</td>
+            <td>{{ o.total_qty or '—' }} units</td>
+            <td style="font-weight:700;color:var(--brand);">₹ {{ "%.2f"|format(o.OrderCost) }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+        {% else %}
+          <div style="text-align:center;padding:48px;color:var(--text-muted);">
+            <div style="font-size:2.5rem;margin-bottom:12px;">📋</div>
+            <p style="font-weight:600;">No restock orders placed yet.</p>
+            <p style="font-size:0.875rem;">Use the Procurement tab to place your first order.</p>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div><!-- /history -->
+
+</div><!-- /dash-body -->
+
+<script>
+  const MGR_TABS = ['dashboard', 'procurement', 'history'];
+
+  function showTab(name) {
+    MGR_TABS.forEach(t => {
+      document.getElementById(`section-${t}`).style.display = 'none';
+      document.getElementById(`tab-${t}`).classList.remove('active');
+    });
+    document.getElementById(`section-${name}`).style.display = 'block';
+    document.getElementById(`tab-${name}`).classList.add('active');
+  }
+
+  showTab('{{ active_tab }}');
+
+  // ── Medicines data for dropdown ──────────────────────────────
+  const MEDICINES_DATA = [
+    {% for med in medicines_list %}
+    { barcode: '{{ med.Barcode }}', name: '{{ med.Name }}' },
+    {% endfor %}
+  ];
+
+  function buildMedicinesSelect() {
+    let options = '<option value="" disabled selected>Select medicine…</option>';
+    MEDICINES_DATA.forEach(med => {
+      options += `<option value="${med.barcode}">${med.barcode} — ${med.name}</option>`;
+    });
+    return options;
+  }
+
+  // ── Dynamic restock item rows ──────────────────────────────
+  function addItemRow() {
+    const row = document.createElement('div');
+    row.className = 'item-row';
+    row.style.cssText = 'display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:8px;align-items:end;margin-bottom:10px;';
+    row.innerHTML = `
+      <div class="form-group" style="margin:0;">
+        <select name="barcode" required onchange="updateBarcodeField(this)"
+               style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:0.875rem;">
+          ${buildMedicinesSelect()}
+        </select>
+      </div>
+      <div class="form-group" style="margin:0;">
+        <input type="number" name="qty_ordered" placeholder="200" min="1" required
+               style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:0.875rem;"/>
+      </div>
+      <div class="form-group" style="margin:0;">
+        <input type="number" name="unit_cost" placeholder="8.50" step="0.01" min="0" required
+               style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:0.875rem;"/>
+      </div>
+      <button type="button" onclick="removeRow(this)"
+        style="height:38px;background:var(--danger);color:#fff;border:none;border-radius:7px;padding:0 10px;cursor:pointer;font-weight:700;">✕</button>`;
+    document.getElementById('item-rows').appendChild(row);
+  }
+
+  function updateBarcodeField(selectElement) {
+    // This function is called when a medicine is selected from the dropdown
+    // The value is already set, so we just need to ensure it's populated
+    console.log('Selected barcode:', selectElement.value);
+  }
+
+  function removeRow(btn) {
+    const rows = document.getElementById('item-rows').querySelectorAll('.item-row');
+    if (rows.length <= 1) {
+      alert('At least one drug item is required.');
+      return;
+    }
+    btn.closest('.item-row').remove();
+  }
+</script>
+
+<div id="restockModal">
+  <div class="modal-content">
+    <h3>Restock Order Details</h3>
+    <p><strong>Order No:</strong> <span id="modalOrderNo"></span> | <strong>Date:</strong> <span id="modalDate"></span></p>
+    <p><strong>Supplier:</strong> <span id="modalSupplier"></span> | <strong>Manager:</strong> <span id="modalStaff"></span></p>
+    <table style="width: 100%; text-align: left; margin-top: 15px;">
+      <thead><tr><th>Medicine</th><th>Qty</th><th>Unit Cost</th><th>Subtotal</th></tr></thead>
+      <tbody id="modalItemsBody"></tbody>
+    </table>
+    <h4 style="text-align: right; margin-top: 15px;">Total Cost: ₹<span id="modalTotal"></span></h4>
+    <button onclick="document.getElementById('restockModal').style.display='none'" style="margin-top: 15px; padding: 8px 16px;">Close</button>
+  </div>
+</div>
+
+<script>
+async function openRestockModal(orderNo) {
+    console.log('Fetching order:', orderNo);
+    try {
+        const response = await fetch('/api/get_restock_order/' + orderNo);
+        const data = await response.json();
+        
+        if (data.status === 'success') {
+            document.getElementById('modalOrderNo').textContent = data.master.Order_No;
+            document.getElementById('modalDate').textContent = data.master.OrderDate || '—';
+            document.getElementById('modalSupplier').textContent = data.master.Supplier_Name || '—';
+            document.getElementById('modalStaff').textContent = data.master.Staff_Name || '—';
+            document.getElementById('modalTotal').textContent = data.master.OrderCost.toFixed(2);
+            
+            const tbody = document.getElementById('modalItemsBody');
+            tbody.innerHTML = '';
+            
+            data.items.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${item.Medicine}</td>
+                    <td>${item.Qty_Ordered}</td>
+                    <td>₹${item.Unit_Cost.toFixed(2)}</td>
+                    <td>₹${item.Subtotal.toFixed(2)}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+            
+            document.getElementById('restockModal').style.display = 'flex';
+        } else {
+            alert('Failed to load order details. Check console.');
+            console.error(data.message);
+        }
+    } catch (error) {
+        alert('Failed to load order details. Check console.');
+        console.error(error);
+    }
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Control Center — Pharmacy</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"/>
+  <link rel="icon" href="{{ url_for('static', filename='images/favicon.png') }}" type="image/png">
+  <style>
+    .sort-link { color: var(--text-muted); text-decoration: none; font-weight: 700; }
+    .sort-link:hover, .sort-link.active { color: var(--brand); }
+    .analytics-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 24px; }
+    .analytics-card { background: #fff; border-radius: 12px; border: 1px solid var(--border); padding: 24px; }
+    .analytics-label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 8px; }
+    .analytics-value { font-size: 2rem; font-weight: 800; color: var(--text-primary); }
+    .analytics-sub   { font-size: 0.8rem; color: var(--text-muted); margin-top: 4px; }
+    .analytics-card.accent { border-left: 4px solid var(--brand); }
+    .analytics-card.success { border-left: 4px solid var(--success); }
+    .analytics-card.warning { border-left: 4px solid #D69E2E; }
+    .two-col-form { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .price-cell { vertical-align: middle; }
+    .price-edit-form { margin-top: 6px; display: none; }
+    .price-edit-form input { width: 84px; padding: 4px 6px; border: 1.5px solid var(--brand); border-radius: 6px; font-size: 0.85rem; }
+    .btn-xs { padding: 3px 9px; border: none; border-radius: 5px; cursor: pointer; font-size: 0.78rem; font-weight: 600; }
+    .btn-xs.confirm { background: var(--success); color: #fff; }
+    .btn-xs.cancel  { background: #FED7D7; color: var(--danger); margin-left: 3px; }
+    .btn-edit-price { padding: 3px 10px; font-size: 0.75rem; background: rgba(43,108,176,0.08); color: var(--brand); border: 1px solid rgba(43,108,176,0.3); border-radius: 5px; cursor: pointer; margin-top: 4px; }
+  </style>
+</head>
+<body>
+
+<nav class="dash-nav">
+  <div class="nav-brand">🛡️ Admin Control Center</div>
+  <div class="nav-user">
+    <span>Logged in as <strong>{{ name }}</strong></span>
+    <a href="{{ url_for('profile') }}" class="btn-profile">👤 My Profile</a>
+    <a href="{{ url_for('logout') }}" class="btn-logout">⏻ Logout</a>
+  </div>
+</nav>
+
+<!-- Tab Bar -->
+<div class="admin-tabs">
+  <button id="tab-staff"     class="tab-btn" onclick="showTab('staff')">👤 Manage Staff</button>
+  <button id="tab-suppliers" class="tab-btn" onclick="showTab('suppliers')">🏭 Manage Suppliers</button>
+  <button id="tab-catalog"   class="tab-btn" onclick="showTab('catalog')">💊 Medicines</button>
+  <button id="tab-inventory" class="tab-btn" onclick="showTab('inventory')">📦 Inventory</button>
+  <button id="tab-billing"   class="tab-btn" onclick="showTab('billing')">🧾 Billing Records</button>
+</div>
+
+<div class="dash-body">
+
+  <!-- Flash -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div style="margin-bottom:16px;">
+        {% for category, message in messages %}
+          <div class="flash {{ category }}" style="margin-bottom:8px;">{{ message }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+
+  <!-- ═══════════ TAB 1: MANAGE STAFF ═══════════ -->
+  <div id="section-staff" class="tab-section">
+
+    <div class="card" style="margin-bottom:24px;">
+      <div class="card-title">➕ Register New Staff Member</div>
+      <form method="POST" action="{{ url_for('admin_add_staff') }}">
+        <div class="two-col-form" style="margin-bottom:16px;">
+          <div class="form-group">
+            <label>Full Name</label>
+            <input name="name" type="text" placeholder="e.g. Dr. Priya Sharma" required/>
+          </div>
+          <div class="form-group">
+            <label>Phone Number</label>
+            <input name="phone" type="tel" placeholder="e.g. 9876543210"/>
+          </div>
+          <div class="form-group" style="grid-column:1/-1;">
+            <label>Role</label>
+            <select name="role" required>
+              <option value="" disabled selected>Select a role…</option>
+              <option value="Admin">Admin</option>
+              <option value="Manager">Manager</option>
+              <option value="Pharmacist">Pharmacist</option>
+            </select>
+          </div>
+        </div>
+        <button type="submit" class="btn-primary" style="max-width:220px;">✅ Register Staff</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <div class="card-title">
+        👥 Current Staff
+        <span style="font-size:0.8rem;color:var(--text-muted);margin-left:auto;">{{ staff_list|length }} member(s)</span>
+      </div>
+      {% if staff_list %}
+      <table class="data-table">
+        <thead><tr>
+          <th>
+            <a class="sort-link {% if sort_staff=='Staff_ID' %}active{% endif %}" href="{{ url_for('admin', tab='staff', sort_staff='Staff_ID', order_staff='DESC' if sort_staff=='Staff_ID' and order_staff=='ASC' else 'ASC') }}">
+              Staff ID {% if sort_staff=='Staff_ID' %}{{ '▼' if order_staff=='DESC' else '▲' }}{% endif %}
+            </a>
+          </th>
+          <th>
+            <a class="sort-link {% if sort_staff=='Name' %}active{% endif %}" href="{{ url_for('admin', tab='staff', sort_staff='Name', order_staff='DESC' if sort_staff=='Name' and order_staff=='ASC' else 'ASC') }}">
+              Name {% if sort_staff=='Name' %}{{ '▼' if order_staff=='DESC' else '▲' }}{% endif %}
+            </a>
+          </th>
+          <th>
+            <a class="sort-link {% if sort_staff=='Role' %}active{% endif %}" href="{{ url_for('admin', tab='staff', sort_staff='Role', order_staff='DESC' if sort_staff=='Role' and order_staff=='ASC' else 'ASC') }}">
+              Role {% if sort_staff=='Role' %}{{ '▼' if order_staff=='DESC' else '▲' }}{% endif %}
+            </a>
+          </th>
+          <th>Phone</th><th>Action</th>
+        </tr></thead>
+        <tbody>
+          {% for s in staff_list %}
+          <tr>
+            <td><strong>{{ s.Staff_ID }}</strong></td>
+            <td>{{ s.Name }}</td>
+            <td>
+              {% if s.Role == 'Admin' %}<span class="badge in-stock">Admin</span>
+              {% elif s.Role == 'Manager' %}<span class="badge low-stock">Manager</span>
+              {% else %}<span class="badge" style="background:rgba(43,108,176,0.1);color:var(--brand);">Pharmacist</span>{% endif %}
+            </td>
+            <td>{{ s.Phone or '—' }}</td>
+            <td>
+              <form method="POST" action="{{ url_for('admin_delete_staff', staff_id=s.Staff_ID) }}" style="display:inline;"
+                    onsubmit="return confirm('Remove {{ s.Name }} ({{ s.Staff_ID }})?');">
+                <button type="submit" class="btn-danger">🗑 Remove</button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+        <p style="text-align:center;color:var(--text-muted);padding:32px;">No staff found.</p>
+      {% endif %}
+    </div>
+  </div><!-- /staff -->
+
+
+  <!-- ═══════════ TAB 2: MANAGE SUPPLIERS ═══════════ -->
+  <div id="section-suppliers" class="tab-section" style="display:none;">
+
+    <div class="card" style="margin-bottom:24px;">
+      <div class="card-title">➕ Add New Supplier</div>
+      <form method="POST" action="{{ url_for('admin_add_supplier') }}">
+        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-bottom:16px;">
+          <div class="form-group">
+            <label>Company Name</label>
+            <input name="name" type="text" placeholder="e.g. Cipla Ltd." required/>
+          </div>
+          <div class="form-group">
+            <label>Email</label>
+            <input name="email" type="email" placeholder="e.g. info@cipla.com"/>
+          </div>
+          <div class="form-group">
+            <label>Phone</label>
+            <input name="phone" type="tel" placeholder="e.g. 9800000001"/>
+          </div>
+          <div class="form-group">
+            <label>City</label>
+            <input name="city" type="text" placeholder="e.g. Mumbai"/>
+          </div>
+        </div>
+        <button type="submit" class="btn-primary" style="max-width:220px;">✅ Add Supplier</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <div class="card-title">
+        🏭 Registered Suppliers
+        <span style="font-size:0.8rem;color:var(--text-muted);margin-left:auto;">{{ supplier_list|length }} supplier(s)</span>
+      </div>
+      {% if supplier_list %}
+      <table class="data-table">
+        <thead><tr>
+          <th>
+            <a class="sort-link {% if sort_sup=='Company_ID' %}active{% endif %}" href="{{ url_for('admin', tab='suppliers', sort_sup='Company_ID', order_sup='DESC' if sort_sup=='Company_ID' and order_sup=='ASC' else 'ASC') }}">
+              Company ID {% if sort_sup=='Company_ID' %}{{ '▼' if order_sup=='DESC' else '▲' }}{% endif %}
+            </a>
+          </th>
+          <th>
+            <a class="sort-link {% if sort_sup=='Name' %}active{% endif %}" href="{{ url_for('admin', tab='suppliers', sort_sup='Name', order_sup='DESC' if sort_sup=='Name' and order_sup=='ASC' else 'ASC') }}">
+              Name {% if sort_sup=='Name' %}{{ '▼' if order_sup=='DESC' else '▲' }}{% endif %}
+            </a>
+          </th>
+          <th>Email</th>
+          <th>Phone</th>
+          <th>
+            <a class="sort-link {% if sort_sup=='City' %}active{% endif %}" href="{{ url_for('admin', tab='suppliers', sort_sup='City', order_sup='DESC' if sort_sup=='City' and order_sup=='ASC' else 'ASC') }}">
+              City {% if sort_sup=='City' %}{{ '▼' if order_sup=='DESC' else '▲' }}{% endif %}
+            </a>
+          </th>
+          <th>Action</th>
+        </tr></thead>
+        <tbody>
+          {% for sup in supplier_list %}
+          <tr>
+            <td><strong>{{ sup.Company_ID }}</strong></td>
+            <td>{{ sup.Name }}</td>
+            <td>{{ sup.Email or '—' }}</td>
+            <td>{{ sup.Phone or '—' }}</td>
+            <td>{{ sup.City or '—' }}</td>
+            <td>
+              <form method="POST" action="{{ url_for('admin_delete_supplier', company_id=sup.Company_ID) }}"
+                    style="display:inline;" onsubmit="return confirm('Remove supplier {{ sup.Name }}?');">
+                <button type="submit" class="btn-danger">🗑 Remove</button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+        <div style="text-align:center;padding:48px;color:var(--text-muted);">
+          <div style="font-size:2.5rem;margin-bottom:12px;">🏭</div>
+          <p style="font-weight:600;">No suppliers registered yet.</p>
+        </div>
+      {% endif %}
+    </div>
+  </div><!-- /suppliers -->
+
+
+  <!-- ═══════════ TAB 3: MASTER CATALOG ═══════════ -->
+  <div id="section-catalog" class="tab-section" style="display:none;">
+    
+    <!-- Add Drug Form -->
+    <div class="card" style="margin-bottom:24px;">
+      <div class="card-title">💊 Register New Medicine</div>
+      <form method="POST" action="{{ url_for('admin_add_drug') }}">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
+          <div class="form-group">
+            <label>Barcode (Required)</label>
+            <input name="barcode" type="text" placeholder="e.g. 9876543210" required/>
+          </div>
+          <div class="form-group">
+            <label>Medicine Name (Required)</label>
+            <input name="name" type="text" placeholder="e.g. Paracetamol 500mg" required/>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:14px;">
+          <div class="form-group">
+            <label>Dose</label>
+            <input name="dose" type="text" placeholder="e.g. 500mg"/>
+          </div>
+          <div class="form-group">
+            <label>Category (Required)</label>
+            <input name="category_name" type="text" placeholder="e.g. Antibiotics" required/>
+          </div>
+          <div class="form-group">
+            <label>Supplier (Required)</label>
+            <select name="company_id" required>
+              <option value="" disabled selected>Select supplier…</option>
+              {% for sup in suppliers %}
+              <option value="{{ sup.Company_ID }}">{{ sup.Name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+        <button type="submit" class="btn-primary" style="max-width:220px;">✅ Register Medicine</button>
+      </form>
+    </div>
+
+    <!-- All Medicines Table -->
+    <div class="card">
+      <div class="card-title">
+        📋 All Registered Medicines
+        <span style="font-size:0.8rem;color:var(--text-muted);margin-left:auto;">{{ drugs_list|length }} medicine(s)</span>
+      </div>
+      {% if drugs_list %}
+      <table class="data-table">
+        <thead><tr>
+          <th>
+            <a class="sort-link {% if sort_drug=='Barcode' %}active{% endif %}" href="{{ url_for('admin', tab='catalog', sort_drug='Barcode', order_drug='DESC' if sort_drug=='Barcode' and order_drug=='ASC' else 'ASC') }}">
+              Barcode {% if sort_drug=='Barcode' %}{{ '▼' if order_drug=='DESC' else '▲' }}{% endif %}
+            </a>
+          </th>
+          <th>
+            <a class="sort-link {% if sort_drug=='Name' %}active{% endif %}" href="{{ url_for('admin', tab='catalog', sort_drug='Name', order_drug='DESC' if sort_drug=='Name' and order_drug=='ASC' else 'ASC') }}">
+              Medicine Name {% if sort_drug=='Name' %}{{ '▼' if order_drug=='DESC' else '▲' }}{% endif %}
+            </a>
+          </th>
+          <th>
+            <a class="sort-link {% if sort_drug=='Dose' %}active{% endif %}" href="{{ url_for('admin', tab='catalog', sort_drug='Dose', order_drug='DESC' if sort_drug=='Dose' and order_drug=='ASC' else 'ASC') }}">
+              Dose {% if sort_drug=='Dose' %}{{ '▼' if order_drug=='DESC' else '▲' }}{% endif %}
+            </a>
+          </th>
+          <th>
+            <a class="sort-link {% if sort_drug=='Category' %}active{% endif %}" href="{{ url_for('admin', tab='catalog', sort_drug='Category', order_drug='DESC' if sort_drug=='Category' and order_drug=='ASC' else 'ASC') }}">
+              Category {% if sort_drug=='Category' %}{{ '▼' if order_drug=='DESC' else '▲' }}{% endif %}
+            </a>
+          </th>
+          <th>
+            <a class="sort-link {% if sort_drug=='Supplier' %}active{% endif %}" href="{{ url_for('admin', tab='catalog', sort_drug='Supplier', order_drug='DESC' if sort_drug=='Supplier' and order_drug=='ASC' else 'ASC') }}">
+              Supplier {% if sort_drug=='Supplier' %}{{ '▼' if order_drug=='DESC' else '▲' }}{% endif %}
+            </a>
+          </th>
+        </tr></thead>
+        <tbody>
+          {% for drug in drugs_list %}
+          <tr>
+            <td><strong>{{ drug.Barcode }}</strong></td>
+            <td>{{ drug.Name }}</td>
+            <td>{{ drug.Dose or '—' }}</td>
+            <td>{{ drug.CategoryName or '—' }}</td>
+            <td>{{ drug.SupplierName or '—' }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+        <div style="text-align:center;padding:48px;color:var(--text-muted);">
+          <div style="font-size:2.5rem;margin-bottom:12px;">💊</div>
+          <p style="font-weight:600;">No medicines registered yet.</p>
+        </div>
+      {% endif %}
+    </div>
+  </div><!-- /catalog -->
+
+
+  <!-- ═══════════ TAB 4: MASTER INVENTORY ═══════════ -->
+  <div id="section-inventory" class="tab-section" style="display:none;">
+    <div class="card">
+      <div class="card-title">
+        📦 Master Inventory
+        <span style="font-size:0.8rem;color:var(--text-muted);margin-left:auto;">{{ inventory_list|length }} batches</span>
+      </div>
+      {% if inventory_list %}
+      <table class="data-table">
+        <thead><tr>
+          <th>
+            <a class="sort-link {% if sort_inv=='BatchNo' %}active{% endif %}" href="{{ url_for('admin', tab='inventory', sort_inv='BatchNo', order_inv='DESC' if sort_inv=='BatchNo' and order_inv=='ASC' else 'ASC') }}">
+              Batch No. {% if sort_inv=='BatchNo' %}{{ '▼' if order_inv=='DESC' else '▲' }}{% endif %}
+            </a>
+          </th>
+          <th>
+            <a class="sort-link {% if sort_inv=='Name' %}active{% endif %}" href="{{ url_for('admin', tab='inventory', sort_inv='Name', order_inv='DESC' if sort_inv=='Name' and order_inv=='ASC' else 'ASC') }}">
+              Drug Name {% if sort_inv=='Name' %}{{ '▼' if order_inv=='DESC' else '▲' }}{% endif %}
+            </a>
+          </th>
+          <th>Barcode</th>
+          <th>
+            <a class="sort-link {% if sort_inv=='qty' %}active{% endif %}" href="{{ url_for('admin', tab='inventory', sort_inv='qty', order_inv='DESC' if sort_inv=='qty' and order_inv=='ASC' else 'ASC') }}">
+              Qty {% if sort_inv=='qty' %}{{ '▼' if order_inv=='DESC' else '▲' }}{% endif %}
+            </a>
+          </th>
+          <th>Mfg. Date</th>
+          <th>
+            <a class="sort-link {% if sort_inv=='ExpDate' %}active{% endif %}" href="{{ url_for('admin', tab='inventory', sort_inv='ExpDate', order_inv='DESC' if sort_inv=='ExpDate' and order_inv=='ASC' else 'ASC') }}">
+              Expiry {% if sort_inv=='ExpDate' %}{{ '▼' if order_inv=='DESC' else '▲' }}{% endif %}
+            </a>
+          </th>
+          <th>
+            <a class="sort-link {% if sort_inv=='price' %}active{% endif %}" href="{{ url_for('admin', tab='inventory', sort_inv='price', order_inv='DESC' if sort_inv=='price' and order_inv=='ASC' else 'ASC') }}">
+              Unit Price {% if sort_inv=='price' %}{{ '▼' if order_inv=='DESC' else '▲' }}{% endif %}
+            </a>
+          </th>
+          <th>Status</th>
+        </tr></thead>
+        <tbody>
+          {% for b in inventory_list %}
+          <tr>
+            <td><strong>{{ b.BatchNo }}</strong></td>
+            <td>{{ b.Name }}</td>
+            <td>{{ b.Barcode }}</td>
+            <td>{{ b.Qty_In_Stock }}</td>
+            <td>{{ b.Mfg_Date }}</td>
+            <td>{{ b.ExpDate }}</td>
+            <td class="price-cell">
+              <div class="price-display">₹ {{ "%.2f"|format(b.Unit_Selling_Price) }}</div>
+              <form class="price-edit-form" method="POST" action="{{ url_for('admin_update_price') }}">
+                <input type="hidden" name="batch_no" value="{{ b.BatchNo }}"/>
+                <input type="hidden" name="barcode"  value="{{ b.Barcode }}"/>
+                <div style="display:flex;align-items:center;gap:4px;margin-top:4px;">
+                  <input type="number" name="new_price" value="{{ b.Unit_Selling_Price }}" step="0.01" min="0" required/>
+                  <button type="submit" class="btn-xs confirm">✓</button>
+                  <button type="button" class="btn-xs cancel cancel-price-btn">✕</button>
+                </div>
+              </form>
+              <button class="btn-edit-price edit-price-btn">✏️ Edit</button>
+            </td>
+            <td>
+              {% if b.Qty_In_Stock == 0 %}<span class="badge out">Out of Stock</span>
+              {% elif b.Qty_In_Stock < 20 %}<span class="badge low-stock">Low Stock</span>
+              {% else %}<span class="badge in-stock">In Stock</span>{% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+        <div style="text-align:center;padding:48px;color:var(--text-muted);">
+          <div style="font-size:2.5rem;margin-bottom:12px;">📭</div>
+          <p style="font-weight:600;">No inventory batches found.</p>
+        </div>
+      {% endif %}
+    </div>
+  </div><!-- /inventory -->
+
+
+  <!-- ═══════════ TAB 4: BILLING RECORDS ═══════════ -->
+  <div id="section-billing" class="tab-section" style="display:none;">
+
+    <!-- All Time Analytics Cards -->
+    <div class="analytics-grid">
+      <div class="analytics-card accent">
+        <div class="analytics-label">All-Time Revenue</div>
+        <div class="analytics-value">₹ {{ "%.2f"|format(total_revenue) }}</div>
+        <div class="analytics-sub">Across all recorded bills</div>
+      </div>
+      <div class="analytics-card success">
+        <div class="analytics-label">Total Units Sold</div>
+        <div class="analytics-value">{{ total_items }}</div>
+        <div class="analytics-sub">Across all transacted items</div>
+      </div>
+      <div class="analytics-card warning">
+        <div class="analytics-label">🏆 Top Selling Drug (All Time)</div>
+        {% if top_medicine %}
+          <div class="analytics-value" style="font-size:1.3rem;">{{ top_medicine.Name }}</div>
+          <div class="analytics-sub">{{ top_medicine.total_sold }} units sold in total</div>
+        {% else %}
+          <div class="analytics-value" style="font-size:1rem;color:var(--text-muted);">No sales yet</div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- All Bills Table -->
+    <div class="card">
+      <div class="card-title">
+        🧾 All Customer Bills
+        <span style="font-size:0.8rem;color:var(--text-muted);margin-left:auto;">{{ billing_records|length }} total bill(s)</span>
+      </div>
+      {% if billing_records %}
+      <table class="data-table" id="billing-table">
+        <thead><tr>
+          <th><a class="sort-link" id="bill-sort-0" href="#" onclick="sortBillingTable(0); return false;">Bill No.</a></th>
+          <th><a class="sort-link" id="bill-sort-1" href="#" onclick="sortBillingTable(1); return false;">Sale Date</a></th>
+          <th><a class="sort-link" id="bill-sort-2" href="#" onclick="sortBillingTable(2); return false;">Customer</a></th>
+          <th><a class="sort-link" id="bill-sort-3" href="#" onclick="sortBillingTable(3); return false;">Phone</a></th>
+          <th><a class="sort-link" id="bill-sort-4" href="#" onclick="sortBillingTable(4); return false;">Processed By</a></th>
+          <th><a class="sort-link" id="bill-sort-5" href="#" onclick="sortBillingTable(5); return false;">Total Amount</a></th>
+          <th>Receipt</th>
+        </tr></thead>
+        <tbody>
+          {% for b in billing_records %}
+          <tr>
+            <td><strong>{{ b.Bill_No }}</strong></td>
+            <td>{{ b.SaleDate }}</td>
+            <td>{{ b.CustomerName or '—' }}</td>
+            <td>{{ b.CustomerPhone or '—' }}</td>
+            <td>{{ b.StaffName or '—' }}</td>
+            <td style="font-weight:700;color:var(--success);">&#8377; {{ "%.2f"|format(b.Total_Amount) }}</td>
+            <td>
+              <button class="btn-action primary" style="padding:5px 14px;font-size:0.78rem;"
+                      onclick="openReceipt('{{ b.Bill_No }}')">&#128196; View</button>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+        <div style="text-align:center;padding:48px;color:var(--text-muted);">
+          <div style="font-size:2.5rem;margin-bottom:12px;">🧾</div>
+          <p style="font-weight:600;">No bills recorded yet.</p>
+          <p style="font-size:0.875rem;">Bills appear here after a Pharmacist completes a sale.</p>
+        </div>
+      {% endif %}
+    </div>
+  </div><!-- /billing -->
+
+</div><!-- /dash-body -->
+
+
+<!-- ═══ Receipt Modal ═══ -->
+<div id="receipt-modal" style="display:none;position:fixed;inset:0;z-index:999;background:rgba(0,0,0,0.45);backdrop-filter:blur(3px);padding:24px;overflow-y:auto;">
+  <div class="receipt-card" style="max-width:560px;margin:40px auto;background:#fff;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,0.18);overflow:hidden;">
+    <!-- Header -->
+    <div style="background:linear-gradient(135deg,var(--brand),#2558A0);color:#fff;padding:24px 28px;">
+      <div style="font-size:1.5rem;font-weight:800;letter-spacing:-0.02em;">&#128138; Pulse Pharmacy</div>
+      <div style="font-size:0.85rem;opacity:0.85;margin-top:4px;">Official Sale Receipt</div>
+    </div>
+    <!-- Meta -->
+    <div style="padding:22px 28px;border-bottom:1px solid var(--border);display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div>
+        <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-muted);">Bill No.</div>
+        <div id="r-bill-no" style="font-weight:800;font-size:1.05rem;color:var(--brand);"></div>
+      </div>
+      <div>
+        <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-muted);">Date</div>
+        <div id="r-date" style="font-weight:600;"></div>
+      </div>
+      <div>
+        <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-muted);">Customer Name</div>
+        <div id="r-customer-name" style="font-weight:600;"></div>
+      </div>
+      <div>
+        <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-muted);">Customer Phone</div>
+        <div id="r-customer-phone" style="font-weight:600;"></div>
+      </div>
+      <div style="grid-column:1/-1;">
+        <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-muted);">Processed By</div>
+        <div id="r-staff-name" style="font-weight:600;"></div>
+      </div>
+    </div>
+    <!-- Items -->
+    <div style="padding:18px 28px;">
+      <table style="width:100%;border-collapse:collapse;font-size:0.875rem;">
+        <thead>
+          <tr style="border-bottom:2px solid var(--border);">
+            <th style="text-align:left;padding:8px 0;font-size:0.7rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-muted);">Medicine</th>
+            <th style="text-align:center;padding:8px 0;font-size:0.7rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-muted);">Qty</th>
+            <th style="text-align:right;padding:8px 0;font-size:0.7rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-muted);">Unit</th>
+            <th style="text-align:right;padding:8px 0;font-size:0.7rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-muted);">Total</th>
+          </tr>
+        </thead>
+        <tbody id="r-items"></tbody>
+      </table>
+    </div>
+    <!-- Total -->
+    <div style="padding:16px 28px 20px;border-top:2px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
+      <span style="font-weight:700;font-size:1rem;">Grand Total</span>
+      <span id="r-total" style="font-weight:800;font-size:1.25rem;color:var(--success);"></span>
+    </div>
+    <!-- Actions -->
+    <div style="padding:0 28px 24px;display:flex;gap:12px;">
+      <button onclick="window.print()" class="btn-action primary" style="flex:1;">&#128424; Print</button>
+      <button onclick="closeReceipt()" class="btn-action secondary" style="flex:1;">&#10005; Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const ADMIN_TABS = ['staff', 'suppliers', 'catalog', 'inventory', 'billing'];
+
+  function showTab(name) {
+    ADMIN_TABS.forEach(t => {
+      document.getElementById(`section-${t}`).style.display = 'none';
+      document.getElementById(`tab-${t}`).classList.remove('active');
+    });
+    document.getElementById(`section-${name}`).style.display = 'block';
+    document.getElementById(`tab-${name}`).classList.add('active');
+  }
+
+  // Restore active tab from server (preserved across sort redirects)
+  showTab('{{ active_tab }}');
+
+  // ── Billing Table Sorting ──
+  let sortDirection = {};
+  let currentSortColumn = null;
+  
+  function sortBillingTable(n) {
+    const table = document.getElementById('billing-table');
+    const tbody = table.querySelector('tbody');
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+    
+    // Clear indicators from all headers
+    document.querySelectorAll('[id^="bill-sort-"]').forEach(el => {
+      el.classList.remove('active');
+      const text = el.textContent.trim();
+      el.textContent = text.replace(/\s*[▼▲]\s*$/, '');
+    });
+    
+    // Toggle sort direction only if same column clicked
+    if (currentSortColumn === n) {
+      sortDirection[n] = !sortDirection[n];
+    } else {
+      sortDirection[n] = true;
+      currentSortColumn = n;
+    }
+    const isAsc = sortDirection[n];
+    
+    rows.sort((rowA, rowB) => {
+      const cellA = rowA.cells[n].innerText.trim();
+      const cellB = rowB.cells[n].innerText.trim();
+      
+      // Check if values are numeric (for Bill No and Total Amount)
+      const numA = parseFloat(cellA.replace(/[^\d.-]/g, ''));
+      const numB = parseFloat(cellB.replace(/[^\d.-]/g, ''));
+      
+      if (!isNaN(numA) && !isNaN(numB)) {
+        // Numeric sort
+        return isAsc ? numA - numB : numB - numA;
+      } else {
+        // String sort
+        return isAsc 
+          ? cellA.localeCompare(cellB) 
+          : cellB.localeCompare(cellA);
+      }
+    });
+    
+    rows.forEach(row => tbody.appendChild(row));
+    
+    // Update header indicator
+    const headerLink = document.getElementById(`bill-sort-${n}`);
+    if (headerLink) {
+      headerLink.classList.add('active');
+      headerLink.textContent += ` ${isAsc ? '▲' : '▼'}`;
+    }
+  }
+
+  // ── Inline Price Edit ──
+  document.querySelectorAll('.edit-price-btn').forEach(btn => {
+    btn.addEventListener('click', function () {
+      const cell = this.closest('.price-cell');
+      cell.querySelector('.price-display').style.display = 'none';
+      cell.querySelector('.price-edit-form').style.display = 'block';
+      this.style.display = 'none';
+    });
+  });
+
+  document.querySelectorAll('.cancel-price-btn').forEach(btn => {
+    btn.addEventListener('click', function () {
+      const cell = this.closest('.price-cell');
+      cell.querySelector('.price-display').style.display = '';
+      cell.querySelector('.price-edit-form').style.display = 'none';
+      cell.querySelector('.edit-price-btn').style.display = '';
+    });
+  });
+
+  // ── Receipt Modal ──
+  function openReceipt(billNo) {
+    fetch(`/api/get_bill/${billNo}`)
+      .then(r => r.json())
+      .then(data => {
+        if (!data.success) { alert('Could not load receipt: ' + data.error); return; }
+        const b = data.bill;
+        document.getElementById('r-bill-no').textContent       = b.Bill_No;
+        document.getElementById('r-date').textContent          = b.SaleDate || '—';
+        document.getElementById('r-customer-name').textContent = b.Customer_Name  || '—';
+        document.getElementById('r-customer-phone').textContent= b.Customer_Phone || '—';
+        document.getElementById('r-staff-name').textContent    = b.Staff_Name     || '—';
+        document.getElementById('r-total').textContent         = `\u20b9 ${parseFloat(b.Total_Amount).toFixed(2)}`;
+
+        let rows = '';
+        data.items.forEach(item => {
+          rows += `
+            <tr style="border-bottom:1px dashed var(--border);">
+              <td style="padding:10px 0;font-weight:600;">${item.drug_name}</td>
+              <td style="padding:10px 0;text-align:center;">${item.Qty_Sold}</td>
+              <td style="padding:10px 0;text-align:right;color:var(--text-muted);">\u20b9${parseFloat(item.Unit_Selling_Price).toFixed(2)}</td>
+              <td style="padding:10px 0;text-align:right;font-weight:700;">\u20b9${parseFloat(item.line_total).toFixed(2)}</td>
+            </tr>`;
+        });
+        document.getElementById('r-items').innerHTML = rows || `<tr><td colspan="4" style="padding:20px;text-align:center;color:var(--text-muted);">No items found.</td></tr>`;
+        document.getElementById('receipt-modal').style.display = 'block';
+      })
+      .catch(err => alert('Network error: ' + err));
+  }
+
+  function closeReceipt() {
+    document.getElementById('receipt-modal').style.display = 'none';
+  }
+
+  // Close modal on backdrop click
+  document.getElementById('receipt-modal').addEventListener('click', function(e) {
+    if (e.target === this) closeReceipt();
+  });
+</script>
+
+</body>
+</html>
