@@ -1,12 +1,4 @@
-Congratulations on getting your project onto GitHub\! A strong, professional `README.md` is the absolute best way to show off your hard work to evaluators, recruiters, and other developers.
 
-Since your project is heavily focused on backend database architecture (MySQL, Triggers, Normalization, and ACID compliance), your README should highlight those technical achievements rather than just being a generic software description.
-
-Here is a comprehensive, ready-to-copy `README.md` tailored specifically to the architecture and features we outlined in your presentation.
-
------
-
-````markdown
 # 🏥 Pulse Pharmacy Management System
 
 A robust, fully normalized relational database system designed to automate pharmacy operations, manage complex inventory lifecycles, and secure sensitive medical and financial data. 
