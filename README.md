@@ -42,20 +42,17 @@ To run this project locally, you will need:
 ### Installation & Setup
 
 1. **Clone the repository:**
-   ```bash
    git clone [https://github.com/yourusername/pharmacy-management-system.git](https://github.com/yourusername/pharmacy-management-system.git)
-````
 
 2.  **Initialize the Database:**
     Open your SQL client and execute the `schema.sql` file. This script contains the DDL commands to generate the database, tables, primary keys, and foreign key constraints.
-    ```sql
     SOURCE path/to/schema.sql;
-    ```
+   
 3.  **Seed the Data:**
     Execute the `seed.sql` file to populate the database with dummy master data, staff, and inventory batches to test the system.
-    ```sql
+   
     SOURCE path/to/seed.sql;
-    ```
+   
 4.  **Deploy Triggers & Views (Optional but recommended):**
     Execute `triggers.sql` to enable automated inventory deductions and `views.sql` to generate pre-compiled financial and low-stock reports.
 
@@ -75,7 +72,6 @@ When a record is inserted into the `BILL_ITEMS` table, an underlying database tr
 
 This project is licensed under the MIT License - see the [LICENSE](https://www.google.com/search?q=LICENSE) file for details.
 
-```
 
 ***
 
@@ -84,4 +80,4 @@ This project is licensed under the MIT License - see the [LICENSE](https://www.g
 2. Paste this entire text block into it.
 3. Make sure to **update the GitHub clone link** under the "Installation & Setup" section with your actual repository URL.
 4. *(Optional)* If you have your SQL code saved in specific files (like `schema.sql` or `triggers.sql`), make sure those filenames match what is in the README, or edit the README to match your actual file structure!
-```
+
