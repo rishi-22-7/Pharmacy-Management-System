@@ -52,7 +52,7 @@
     <tbody>
       {% for s in staff_list %}
       <tr>
-        <td><strong>{{ s.Staff_ID }}</strong></td>
+        <td><strong>{{ 'ADM' if s.Role == 'Admin' else 'MGR' if s.Role == 'Manager' else 'PHR' }}{{ s.Staff_ID }}</strong></td>
         <td>{{ s.Name }}</td>
         <td>
           {% if s.Role == 'Admin' %}<span class="badge in-stock">Admin</span>
@@ -62,7 +62,7 @@
         <td>{{ s.Phone or '—' }}</td>
         <td>
           <form method="POST" action="{{ url_for('admin_delete_staff', staff_id=s.Staff_ID) }}" style="display:inline;"
-                onsubmit="return confirm('Remove {{ s.Name }} ({{ s.Staff_ID }})?');">
+                onsubmit="return confirm('Remove {{ s.Name }} ({{ 'ADM' if s.Role == 'Admin' else 'MGR' if s.Role == 'Manager' else 'PHR' }}{{ s.Staff_ID }})?');">
             <button type="submit" class="btn-danger">🗑 Remove</button>
           </form>
         </td>

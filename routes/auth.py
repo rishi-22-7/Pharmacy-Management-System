@@ -6,9 +6,30 @@ def register_auth_routes(app):
     @app.route('/', methods=['GET', 'POST'])
     def login():
         if request.method == 'POST':
-            staff_id      = request.form.get('staff_id',      '').strip()
+            staff_id_input = request.form.get('staff_id', '').strip()
             login_role    = request.form.get('login_role',    '').strip()
             password_input = request.form.get('password',     '').strip()
+            
+            # Parse the prefix (e.g., ADM1, MGR2, PHR3)
+            import re
+            match = re.match(r'^([a-zA-Z]+)?(\d+)$', staff_id_input)
+            if not match:
+                flash('Invalid Staff ID format. Use prefixes like ADM1, MGR2, or PHR3.', 'error')
+                return redirect(url_for('login'))
+            
+            prefix, numeric_id = match.group(1), match.group(2)
+            expected_prefix = {'Admin': 'ADM', 'Manager': 'MGR', 'Pharmacist': 'PHR'}.get(login_role, '')
+            
+            if not prefix:
+                flash(f'Prefix is required. Please use {expected_prefix}{numeric_id} for your ID.', 'error')
+                return redirect(url_for('login'))
+                
+            if prefix.upper() != expected_prefix:
+                flash(f'ID prefix "{prefix.upper()}" does not match selected role. Expected "{expected_prefix}".', 'error')
+                return redirect(url_for('login'))
+                
+            staff_id = int(numeric_id)
+
             conn = get_db_connection()
             if conn is None:
                 flash('Database connection failed.', 'error')

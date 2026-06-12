@@ -205,7 +205,7 @@
       <div class="detail-icon">🆔</div>
       <div>
         <div class="detail-label">Staff ID</div>
-        <div class="detail-value">{{ user.Staff_ID }}</div>
+        <div class="detail-value">{{ 'ADM' if user.Role == 'Admin' else 'MGR' if user.Role == 'Manager' else 'PHR' }}{{ user.Staff_ID }}</div>
       </div>
     </div>
 
