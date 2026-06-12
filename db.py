@@ -1,3 +1,4 @@
+import os
 import mysql.connector
 from mysql.connector import Error
 from flask import session
@@ -5,9 +6,11 @@ from flask import session
 def get_db_connection():
     try:
         connection = mysql.connector.connect(
-            host='localhost', port=3006,
-            database='pharmacy_db', user='root',
-            password='Rishi_22@srm'
+            host=os.environ.get('DB_HOST', 'localhost'),
+            port=int(os.environ.get('DB_PORT', 3006)),
+            database=os.environ.get('DB_NAME', 'pharmacy_db'),
+            user=os.environ.get('DB_USER', 'root'),
+            password=os.environ.get('DB_PASSWORD', 'Rishi_22@srm')
         )
         if connection.is_connected():
             return connection
