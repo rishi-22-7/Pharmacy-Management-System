@@ -1,0 +1,97 @@
+<div class="proc-grid">
+
+  <!-- Form 1: Place Restock Order -->
+  <div class="card">
+    <div class="card-title">📋 Place Restock Order</div>
+    <form method="POST" action="{{ url_for('manager_place_order') }}" id="restock-form">
+      <div class="form-group" style="margin-bottom:14px;">
+        <label>Supplier <span style="color:var(--danger);">*</span></label>
+        {% if supplier_list %}
+        <select name="company_id" required>
+          <option value="" disabled selected>Select supplier…</option>
+          {% for sup in supplier_list %}
+            <option value="{{ sup.Company_ID }}">{{ sup.Name }} (ID: {{ sup.Company_ID }})</option>
+          {% endfor %}
+        </select>
+        {% else %}
+        <p style="color:var(--danger);font-size:0.85rem;">⚠ No suppliers registered. Ask Admin to add one first.</p>
+        <input type="hidden" name="company_id" value=""/>
+        {% endif %}
+      </div>
+
+      <!-- Dynamic Item Rows -->
+      <div id="item-rows" style="margin-bottom:14px;">
+        <div class="item-row" style="display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:8px;align-items:end;margin-bottom:10px;">
+          <div class="form-group" style="margin:0;">
+            <label>Drug (Code & Name)</label>
+            <select name="barcode" required onchange="updateBarcodeField(this)">
+              <option value="" disabled selected>Select medicine…</option>
+              {% for med in medicines_list %}
+              <option value="{{ med.Barcode }}">{{ med.Barcode }} — {{ med.Name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-group" style="margin:0;">
+            <label>Qty</label>
+            <input type="number" name="qty_ordered" placeholder="200" min="1" required/>
+          </div>
+          <div class="form-group" style="margin:0;">
+            <label>Unit Cost (&#8377;)</label>
+            <input type="number" name="unit_cost" placeholder="8.50" step="0.01" min="0" required/>
+          </div>
+          <button type="button" onclick="removeRow(this)"
+            style="height:38px;margin-top:auto;background:var(--danger);color:#fff;border:none;border-radius:7px;padding:0 10px;cursor:pointer;font-weight:700;align-self:end;">✕</button>
+        </div>
+      </div>
+
+      <button type="button" id="add-item-btn"
+        style="background:rgba(43,108,176,0.08);color:var(--brand);border:1.5px dashed var(--brand);border-radius:8px;padding:8px 16px;cursor:pointer;font-weight:600;font-size:0.85rem;width:100%;margin-bottom:14px;"
+        onclick="addItemRow()">&#43; Add Another Drug</button>
+
+      <button type="submit" class="btn-action primary" style="width:100%;justify-content:center;">
+        &#128203; Place Restock Order
+      </button>
+    </form>
+  </div>
+
+  <!-- Form 2: Intake Delivery -->
+  <div class="card">
+    <div class="card-title">📥 Intake Delivery — Add to Shelf</div>
+    <form method="POST" action="{{ url_for('manager_intake_batch') }}">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
+        <div class="form-group">
+          <label>New Batch No.</label>
+          <input type="text" name="batch_no" placeholder="e.g. B-2601" required/>
+        </div>
+        <div class="form-group">
+          <label>Drug Barcode</label>
+          <input type="text" name="barcode" placeholder="e.g. MED001" required/>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
+        <div class="form-group">
+          <label>Mfg. Date</label>
+          <input type="date" name="mfg_date" required/>
+        </div>
+        <div class="form-group">
+          <label>Expiry Date</label>
+          <input type="date" name="exp_date" required/>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+        <div class="form-group">
+          <label>Quantity Received</label>
+          <input type="number" name="qty" placeholder="100" min="1" required/>
+        </div>
+        <div class="form-group">
+          <label>Selling Price (₹)</label>
+          <input type="number" name="price" placeholder="12.50" step="0.01" min="0" required/>
+        </div>
+      </div>
+      <button type="submit" class="btn-action secondary" style="width:100%;justify-content:center;">
+        📥 Add to Inventory
+      </button>
+    </form>
+  </div>
+
+</div><!-- /proc-grid -->

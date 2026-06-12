@@ -1,0 +1,50 @@
+<!-- Personal Stats Banner -->
+<div class="my-stats-banner">
+  <div class="my-stat-card" style="border-left:4px solid var(--brand);">
+    <div class="my-stat-label">My Total Bills Processed</div>
+    <div class="my-stat-value">{{ my_total_bills }}</div>
+  </div>
+  <div class="my-stat-card" style="border-left:4px solid var(--success);">
+    <div class="my-stat-label">Total Revenue</div>
+    <div class="my-stat-value" style="color:var(--success);">&#8377; {{ "%.2f"|format(my_total_sales) }}</div>
+  </div>
+</div>
+
+<!-- Personal Bills Table -->
+<div class="card">
+  <div class="card-title">
+    &#128202; My Processed Bills
+    <span style="font-size:0.8rem;color:var(--text-muted);margin-left:auto;">{{ my_bills|length }} bill(s)</span>
+  </div>
+  {% if my_bills %}
+  <table class="data-table">
+    <thead><tr>
+      <th>Bill No.</th>
+      <th>Sale Date</th>
+      <th>Customer</th>
+      <th>Total Amount</th>
+      <th>Receipt</th>
+    </tr></thead>
+    <tbody>
+      {% for b in my_bills %}
+      <tr>
+        <td><strong>#{{ b.Bill_No }}</strong></td>
+        <td>{{ b.SaleDate }}</td>
+        <td>{{ b.Customer_Name or '&mdash;' }}</td>
+        <td style="font-weight:700;color:var(--success);">&#8377; {{ "%.2f"|format(b.Total_Amount) }}</td>
+        <td>
+          <button class="btn-action primary" style="padding:4px 12px;font-size:0.78rem;"
+                  onclick="openReceipt('{{ b.Bill_No }}')">&#128196; View</button>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+    <div style="text-align:center;padding:48px;color:var(--text-muted);">
+      <div style="font-size:2.5rem;margin-bottom:12px;">&#128202;</div>
+      <p style="font-weight:600;">No bills processed yet.</p>
+      <p style="font-size:0.875rem;">Complete a sale from the Point of Sale tab to see your history here.</p>
+    </div>
+  {% endif %}
+</div>

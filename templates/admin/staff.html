@@ -1,0 +1,76 @@
+<div class="card" style="margin-bottom:24px;">
+  <div class="card-title">➕ Register New Staff Member</div>
+  <form method="POST" action="{{ url_for('admin_add_staff') }}">
+    <div class="two-col-form" style="margin-bottom:16px;">
+      <div class="form-group">
+        <label>Full Name</label>
+        <input name="name" type="text" placeholder="e.g. Dr. Priya Sharma" required/>
+      </div>
+      <div class="form-group">
+        <label>Phone Number</label>
+        <input name="phone" type="tel" placeholder="e.g. 9876543210"/>
+      </div>
+      <div class="form-group" style="grid-column:1/-1;">
+        <label>Role</label>
+        <select name="role" required>
+          <option value="" disabled selected>Select a role…</option>
+          <option value="Admin">Admin</option>
+          <option value="Manager">Manager</option>
+          <option value="Pharmacist">Pharmacist</option>
+        </select>
+      </div>
+    </div>
+    <button type="submit" class="btn-primary" style="max-width:220px;">✅ Register Staff</button>
+  </form>
+</div>
+
+<div class="card">
+  <div class="card-title">
+    👥 Current Staff
+    <span style="font-size:0.8rem;color:var(--text-muted);margin-left:auto;">{{ staff_list|length }} member(s)</span>
+  </div>
+  {% if staff_list %}
+  <table class="data-table">
+    <thead><tr>
+      <th>
+        <a class="sort-link {% if sort_staff=='Staff_ID' %}active{% endif %}" href="{{ url_for('admin', tab='staff', sort_staff='Staff_ID', order_staff='DESC' if sort_staff=='Staff_ID' and order_staff=='ASC' else 'ASC') }}">
+          Staff ID {% if sort_staff=='Staff_ID' %}{{ '▼' if order_staff=='DESC' else '▲' }}{% endif %}
+        </a>
+      </th>
+      <th>
+        <a class="sort-link {% if sort_staff=='Name' %}active{% endif %}" href="{{ url_for('admin', tab='staff', sort_staff='Name', order_staff='DESC' if sort_staff=='Name' and order_staff=='ASC' else 'ASC') }}">
+          Name {% if sort_staff=='Name' %}{{ '▼' if order_staff=='DESC' else '▲' }}{% endif %}
+        </a>
+      </th>
+      <th>
+        <a class="sort-link {% if sort_staff=='Role' %}active{% endif %}" href="{{ url_for('admin', tab='staff', sort_staff='Role', order_staff='DESC' if sort_staff=='Role' and order_staff=='ASC' else 'ASC') }}">
+          Role {% if sort_staff=='Role' %}{{ '▼' if order_staff=='DESC' else '▲' }}{% endif %}
+        </a>
+      </th>
+      <th>Phone</th><th>Action</th>
+    </tr></thead>
+    <tbody>
+      {% for s in staff_list %}
+      <tr>
+        <td><strong>{{ s.Staff_ID }}</strong></td>
+        <td>{{ s.Name }}</td>
+        <td>
+          {% if s.Role == 'Admin' %}<span class="badge in-stock">Admin</span>
+          {% elif s.Role == 'Manager' %}<span class="badge low-stock">Manager</span>
+          {% else %}<span class="badge" style="background:rgba(43,108,176,0.1);color:var(--brand);">Pharmacist</span>{% endif %}
+        </td>
+        <td>{{ s.Phone or '—' }}</td>
+        <td>
+          <form method="POST" action="{{ url_for('admin_delete_staff', staff_id=s.Staff_ID) }}" style="display:inline;"
+                onsubmit="return confirm('Remove {{ s.Name }} ({{ s.Staff_ID }})?');">
+            <button type="submit" class="btn-danger">🗑 Remove</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+    <p style="text-align:center;color:var(--text-muted);padding:32px;">No staff found.</p>
+  {% endif %}
+</div>

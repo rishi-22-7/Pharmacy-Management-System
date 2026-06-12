@@ -1,0 +1,77 @@
+<div class="card" style="margin-bottom:24px;">
+  <div class="card-title">➕ Add New Supplier</div>
+  <form method="POST" action="{{ url_for('admin_add_supplier') }}">
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-bottom:16px;">
+      <div class="form-group">
+        <label>Company Name</label>
+        <input name="name" type="text" placeholder="e.g. Cipla Ltd." required/>
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input name="email" type="email" placeholder="e.g. info@cipla.com"/>
+      </div>
+      <div class="form-group">
+        <label>Phone</label>
+        <input name="phone" type="tel" placeholder="e.g. 9800000001"/>
+      </div>
+      <div class="form-group">
+        <label>City</label>
+        <input name="city" type="text" placeholder="e.g. Mumbai"/>
+      </div>
+    </div>
+    <button type="submit" class="btn-primary" style="max-width:220px;">✅ Add Supplier</button>
+  </form>
+</div>
+
+<div class="card">
+  <div class="card-title">
+    🏭 Registered Suppliers
+    <span style="font-size:0.8rem;color:var(--text-muted);margin-left:auto;">{{ supplier_list|length }} supplier(s)</span>
+  </div>
+  {% if supplier_list %}
+  <table class="data-table">
+    <thead><tr>
+      <th>
+        <a class="sort-link {% if sort_sup=='Company_ID' %}active{% endif %}" href="{{ url_for('admin', tab='suppliers', sort_sup='Company_ID', order_sup='DESC' if sort_sup=='Company_ID' and order_sup=='ASC' else 'ASC') }}">
+          Company ID {% if sort_sup=='Company_ID' %}{{ '▼' if order_sup=='DESC' else '▲' }}{% endif %}
+        </a>
+      </th>
+      <th>
+        <a class="sort-link {% if sort_sup=='Name' %}active{% endif %}" href="{{ url_for('admin', tab='suppliers', sort_sup='Name', order_sup='DESC' if sort_sup=='Name' and order_sup=='ASC' else 'ASC') }}">
+          Name {% if sort_sup=='Name' %}{{ '▼' if order_sup=='DESC' else '▲' }}{% endif %}
+        </a>
+      </th>
+      <th>Email</th>
+      <th>Phone</th>
+      <th>
+        <a class="sort-link {% if sort_sup=='City' %}active{% endif %}" href="{{ url_for('admin', tab='suppliers', sort_sup='City', order_sup='DESC' if sort_sup=='City' and order_sup=='ASC' else 'ASC') }}">
+          City {% if sort_sup=='City' %}{{ '▼' if order_sup=='DESC' else '▲' }}{% endif %}
+        </a>
+      </th>
+      <th>Action</th>
+    </tr></thead>
+    <tbody>
+      {% for sup in supplier_list %}
+      <tr>
+        <td><strong>{{ sup.Company_ID }}</strong></td>
+        <td>{{ sup.Name }}</td>
+        <td>{{ sup.Email or '—' }}</td>
+        <td>{{ sup.Phone or '—' }}</td>
+        <td>{{ sup.City or '—' }}</td>
+        <td>
+          <form method="POST" action="{{ url_for('admin_delete_supplier', company_id=sup.Company_ID) }}"
+                style="display:inline;" onsubmit="return confirm('Remove supplier {{ sup.Name }}?');">
+            <button type="submit" class="btn-danger">🗑 Remove</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+    <div style="text-align:center;padding:48px;color:var(--text-muted);">
+      <div style="font-size:2.5rem;margin-bottom:12px;">🏭</div>
+      <p style="font-weight:600;">No suppliers registered yet.</p>
+    </div>
+  {% endif %}
+</div>

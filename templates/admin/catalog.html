@@ -1,0 +1,91 @@
+<!-- Add Drug Form -->
+<div class="card" style="margin-bottom:24px;">
+  <div class="card-title">💊 Register New Medicine</div>
+  <form method="POST" action="{{ url_for('admin_add_drug') }}">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
+      <div class="form-group">
+        <label>Barcode (Required)</label>
+        <input name="barcode" type="text" placeholder="e.g. 9876543210" required/>
+      </div>
+      <div class="form-group">
+        <label>Medicine Name (Required)</label>
+        <input name="name" type="text" placeholder="e.g. Paracetamol 500mg" required/>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:14px;">
+      <div class="form-group">
+        <label>Dose</label>
+        <input name="dose" type="text" placeholder="e.g. 500mg"/>
+      </div>
+      <div class="form-group">
+        <label>Category (Required)</label>
+        <input name="category_name" type="text" placeholder="e.g. Antibiotics" required/>
+      </div>
+      <div class="form-group">
+        <label>Supplier (Required)</label>
+        <select name="company_id" required>
+          <option value="" disabled selected>Select supplier…</option>
+          {% for sup in suppliers %}
+          <option value="{{ sup.Company_ID }}">{{ sup.Name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+    <button type="submit" class="btn-primary" style="max-width:220px;">✅ Register Medicine</button>
+  </form>
+</div>
+
+<!-- All Medicines Table -->
+<div class="card">
+  <div class="card-title">
+    📋 All Registered Medicines
+    <span style="font-size:0.8rem;color:var(--text-muted);margin-left:auto;">{{ drugs_list|length }} medicine(s)</span>
+  </div>
+  {% if drugs_list %}
+  <table class="data-table">
+    <thead><tr>
+      <th>
+        <a class="sort-link {% if sort_drug=='Barcode' %}active{% endif %}" href="{{ url_for('admin', tab='catalog', sort_drug='Barcode', order_drug='DESC' if sort_drug=='Barcode' and order_drug=='ASC' else 'ASC') }}">
+          Barcode {% if sort_drug=='Barcode' %}{{ '▼' if order_drug=='DESC' else '▲' }}{% endif %}
+        </a>
+      </th>
+      <th>
+        <a class="sort-link {% if sort_drug=='Name' %}active{% endif %}" href="{{ url_for('admin', tab='catalog', sort_drug='Name', order_drug='DESC' if sort_drug=='Name' and order_drug=='ASC' else 'ASC') }}">
+          Medicine Name {% if sort_drug=='Name' %}{{ '▼' if order_drug=='DESC' else '▲' }}{% endif %}
+        </a>
+      </th>
+      <th>
+        <a class="sort-link {% if sort_drug=='Dose' %}active{% endif %}" href="{{ url_for('admin', tab='catalog', sort_drug='Dose', order_drug='DESC' if sort_drug=='Dose' and order_drug=='ASC' else 'ASC') }}">
+          Dose {% if sort_drug=='Dose' %}{{ '▼' if order_drug=='DESC' else '▲' }}{% endif %}
+        </a>
+      </th>
+      <th>
+        <a class="sort-link {% if sort_drug=='Category' %}active{% endif %}" href="{{ url_for('admin', tab='catalog', sort_drug='Category', order_drug='DESC' if sort_drug=='Category' and order_drug=='ASC' else 'ASC') }}">
+          Category {% if sort_drug=='Category' %}{{ '▼' if order_drug=='DESC' else '▲' }}{% endif %}
+        </a>
+      </th>
+      <th>
+        <a class="sort-link {% if sort_drug=='Supplier' %}active{% endif %}" href="{{ url_for('admin', tab='catalog', sort_drug='Supplier', order_drug='DESC' if sort_drug=='Supplier' and order_drug=='ASC' else 'ASC') }}">
+          Supplier {% if sort_drug=='Supplier' %}{{ '▼' if order_drug=='DESC' else '▲' }}{% endif %}
+        </a>
+      </th>
+    </tr></thead>
+    <tbody>
+      {% for drug in drugs_list %}
+      <tr>
+        <td><strong>{{ drug.Barcode }}</strong></td>
+        <td>{{ drug.Name }}</td>
+        <td>{{ drug.Dose or '—' }}</td>
+        <td>{{ drug.CategoryName or '—' }}</td>
+        <td>{{ drug.SupplierName or '—' }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+    <div style="text-align:center;padding:48px;color:var(--text-muted);">
+      <div style="font-size:2.5rem;margin-bottom:12px;">💊</div>
+      <p style="font-weight:600;">No medicines registered yet.</p>
+    </div>
+  {% endif %}
+</div>

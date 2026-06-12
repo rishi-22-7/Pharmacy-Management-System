@@ -1,0 +1,75 @@
+<div class="card">
+  <div class="card-title">
+    📦 Master Inventory
+    <span style="font-size:0.8rem;color:var(--text-muted);margin-left:auto;">{{ inventory_list|length }} batches</span>
+  </div>
+  {% if inventory_list %}
+  <table class="data-table">
+    <thead><tr>
+      <th>
+        <a class="sort-link {% if sort_inv=='BatchNo' %}active{% endif %}" href="{{ url_for('admin', tab='inventory', sort_inv='BatchNo', order_inv='DESC' if sort_inv=='BatchNo' and order_inv=='ASC' else 'ASC') }}">
+          Batch No. {% if sort_inv=='BatchNo' %}{{ '▼' if order_inv=='DESC' else '▲' }}{% endif %}
+        </a>
+      </th>
+      <th>
+        <a class="sort-link {% if sort_inv=='Name' %}active{% endif %}" href="{{ url_for('admin', tab='inventory', sort_inv='Name', order_inv='DESC' if sort_inv=='Name' and order_inv=='ASC' else 'ASC') }}">
+          Drug Name {% if sort_inv=='Name' %}{{ '▼' if order_inv=='DESC' else '▲' }}{% endif %}
+        </a>
+      </th>
+      <th>Barcode</th>
+      <th>
+        <a class="sort-link {% if sort_inv=='qty' %}active{% endif %}" href="{{ url_for('admin', tab='inventory', sort_inv='qty', order_inv='DESC' if sort_inv=='qty' and order_inv=='ASC' else 'ASC') }}">
+          Qty {% if sort_inv=='qty' %}{{ '▼' if order_inv=='DESC' else '▲' }}{% endif %}
+        </a>
+      </th>
+      <th>Mfg. Date</th>
+      <th>
+        <a class="sort-link {% if sort_inv=='ExpDate' %}active{% endif %}" href="{{ url_for('admin', tab='inventory', sort_inv='ExpDate', order_inv='DESC' if sort_inv=='ExpDate' and order_inv=='ASC' else 'ASC') }}">
+          Expiry {% if sort_inv=='ExpDate' %}{{ '▼' if order_inv=='DESC' else '▲' }}{% endif %}
+        </a>
+      </th>
+      <th>
+        <a class="sort-link {% if sort_inv=='price' %}active{% endif %}" href="{{ url_for('admin', tab='inventory', sort_inv='price', order_inv='DESC' if sort_inv=='price' and order_inv=='ASC' else 'ASC') }}">
+          Unit Price {% if sort_inv=='price' %}{{ '▼' if order_inv=='DESC' else '▲' }}{% endif %}
+        </a>
+      </th>
+      <th>Status</th>
+    </tr></thead>
+    <tbody>
+      {% for b in inventory_list %}
+      <tr>
+        <td><strong>{{ b.BatchNo }}</strong></td>
+        <td>{{ b.Name }}</td>
+        <td>{{ b.Barcode }}</td>
+        <td>{{ b.Qty_In_Stock }}</td>
+        <td>{{ b.Mfg_Date }}</td>
+        <td>{{ b.ExpDate }}</td>
+        <td class="price-cell">
+          <div class="price-display">₹ {{ "%.2f"|format(b.Unit_Selling_Price) }}</div>
+          <form class="price-edit-form" method="POST" action="{{ url_for('admin_update_price') }}">
+            <input type="hidden" name="batch_no" value="{{ b.BatchNo }}"/>
+            <input type="hidden" name="barcode"  value="{{ b.Barcode }}"/>
+            <div style="display:flex;align-items:center;gap:4px;margin-top:4px;">
+              <input type="number" name="new_price" value="{{ b.Unit_Selling_Price }}" step="0.01" min="0" required/>
+              <button type="submit" class="btn-xs confirm">✓</button>
+              <button type="button" class="btn-xs cancel cancel-price-btn">✕</button>
+            </div>
+          </form>
+          <button class="btn-edit-price edit-price-btn">✏️ Edit</button>
+        </td>
+        <td>
+          {% if b.Qty_In_Stock == 0 %}<span class="badge out">Out of Stock</span>
+          {% elif b.Qty_In_Stock < 20 %}<span class="badge low-stock">Low Stock</span>
+          {% else %}<span class="badge in-stock">In Stock</span>{% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+    <div style="text-align:center;padding:48px;color:var(--text-muted);">
+      <div style="font-size:2.5rem;margin-bottom:12px;">📭</div>
+      <p style="font-weight:600;">No inventory batches found.</p>
+    </div>
+  {% endif %}
+</div>

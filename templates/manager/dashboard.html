@@ -1,0 +1,108 @@
+<!-- Live Stat Cards -->
+<div class="stat-cards">
+  <div class="stat-card">
+    <div class="stat-label">Total Units In Stock</div>
+    <div class="stat-value">{{ total_stock }}</div>
+  </div>
+  <div class="stat-card danger">
+    <div class="stat-label">⚠ Low Stock Alerts</div>
+    <div class="stat-value">{{ low_stock|length }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Restock Orders Placed</div>
+    <div class="stat-value">{{ pending_orders }}</div>
+  </div>
+</div>
+
+<!-- Low Stock Alert Panel -->
+{% if low_stock %}
+<div class="alert-panel">
+  <div class="alert-icon">🚨</div>
+  <div style="flex:1;">
+    <div class="alert-title">{{ low_stock|length }} Batch(es) Running Low (< 20 units)</div>
+    <div style="margin-top:10px;">
+      <table class="data-table" style="background:transparent;">
+        <thead><tr>
+          <th style="background:rgba(229,62,62,0.06);">Batch No.</th>
+          <th style="background:rgba(229,62,62,0.06);">Drug Name</th>
+          <th style="background:rgba(229,62,62,0.06);">Units Left</th>
+        </tr></thead>
+        <tbody>
+          {% for item in low_stock %}
+          <tr>
+            <td>{{ item.BatchNo }}</td>
+            <td>{{ item.Name }}</td>
+            <td style="color:var(--danger);font-weight:700;">{{ item.Qty_In_Stock }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<!-- Full Inventory Table -->
+<div class="card">
+  <div class="card-title">
+    📊 Current Inventory Batches
+    <span style="font-size:0.8rem;color:var(--text-muted);margin-left:auto;">{{ batches|length }} batch(es)</span>
+  </div>
+  {% if batches %}
+  <table class="data-table">
+    <thead><tr>
+      <th>
+        <a class="sort-link {% if sort_inv=='BatchNo' %}active{% endif %}" href="{{ url_for('manager', tab='dashboard', sort_inv='BatchNo', order_inv='DESC' if sort_inv=='BatchNo' and order_inv=='ASC' else 'ASC') }}">
+          Batch No. {% if sort_inv=='BatchNo' %}{{ '▼' if order_inv=='DESC' else '▲' }}{% endif %}
+        </a>
+      </th>
+      <th>
+        <a class="sort-link {% if sort_inv=='Name' %}active{% endif %}" href="{{ url_for('manager', tab='dashboard', sort_inv='Name', order_inv='DESC' if sort_inv=='Name' and order_inv=='ASC' else 'ASC') }}">
+          Drug Name {% if sort_inv=='Name' %}{{ '▼' if order_inv=='DESC' else '▲' }}{% endif %}
+        </a>
+      </th>
+      <th>Barcode</th>
+      <th>
+        <a class="sort-link {% if sort_inv=='qty' %}active{% endif %}" href="{{ url_for('manager', tab='dashboard', sort_inv='qty', order_inv='DESC' if sort_inv=='qty' and order_inv=='ASC' else 'ASC') }}">
+          Qty {% if sort_inv=='qty' %}{{ '▼' if order_inv=='DESC' else '▲' }}{% endif %}
+        </a>
+      </th>
+      <th>Mfg. Date</th>
+      <th>
+        <a class="sort-link {% if sort_inv=='ExpDate' %}active{% endif %}" href="{{ url_for('manager', tab='dashboard', sort_inv='ExpDate', order_inv='DESC' if sort_inv=='ExpDate' and order_inv=='ASC' else 'ASC') }}">
+          Expiry {% if sort_inv=='ExpDate' %}{{ '▼' if order_inv=='DESC' else '▲' }}{% endif %}
+        </a>
+      </th>
+      <th>
+        <a class="sort-link {% if sort_inv=='price' %}active{% endif %}" href="{{ url_for('manager', tab='dashboard', sort_inv='price', order_inv='DESC' if sort_inv=='price' and order_inv=='ASC' else 'ASC') }}">
+          Unit Price {% if sort_inv=='price' %}{{ '▼' if order_inv=='DESC' else '▲' }}{% endif %}
+        </a>
+      </th>
+      <th>Status</th>
+    </tr></thead>
+    <tbody>
+      {% for b in batches %}
+      <tr>
+        <td><strong>{{ b.BatchNo }}</strong></td>
+        <td>{{ b.Name }}</td>
+        <td>{{ b.Barcode }}</td>
+        <td>{{ b.Qty_In_Stock }}</td>
+        <td>{{ b.Mfg_Date }}</td>
+        <td>{{ b.ExpDate }}</td>
+        <td>₹ {{ "%.2f"|format(b.Unit_Selling_Price) }}</td>
+        <td>
+          {% if b.Qty_In_Stock == 0 %}<span class="badge out">Out of Stock</span>
+          {% elif b.Qty_In_Stock < 20 %}<span class="badge low-stock">Low Stock</span>
+          {% else %}<span class="badge in-stock">In Stock</span>{% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+    <div style="text-align:center;padding:48px;color:var(--text-muted);">
+      <div style="font-size:2.5rem;margin-bottom:12px;">📭</div>
+      <p style="font-weight:600;">No inventory found. Use Procurement to add stock.</p>
+    </div>
+  {% endif %}
+</div>

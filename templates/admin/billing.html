@@ -1,0 +1,65 @@
+<!-- All Time Analytics Cards -->
+<div class="analytics-grid">
+  <div class="analytics-card accent">
+    <div class="analytics-label">All-Time Revenue</div>
+    <div class="analytics-value">₹ {{ "%.2f"|format(total_revenue) }}</div>
+    <div class="analytics-sub">Across all recorded bills</div>
+  </div>
+  <div class="analytics-card success">
+    <div class="analytics-label">Total Units Sold</div>
+    <div class="analytics-value">{{ total_items }}</div>
+    <div class="analytics-sub">Across all transacted items</div>
+  </div>
+  <div class="analytics-card warning">
+    <div class="analytics-label">🏆 Top Selling Drug (All Time)</div>
+    {% if top_medicine %}
+      <div class="analytics-value" style="font-size:1.3rem;">{{ top_medicine.Name }}</div>
+      <div class="analytics-sub">{{ top_medicine.total_sold }} units sold in total</div>
+    {% else %}
+      <div class="analytics-value" style="font-size:1rem;color:var(--text-muted);">No sales yet</div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- All Bills Table -->
+<div class="card">
+  <div class="card-title">
+    🧾 All Customer Bills
+    <span style="font-size:0.8rem;color:var(--text-muted);margin-left:auto;">{{ billing_records|length }} total bill(s)</span>
+  </div>
+  {% if billing_records %}
+  <table class="data-table" id="billing-table">
+    <thead><tr>
+      <th><a class="sort-link" id="bill-sort-0" href="#" onclick="sortBillingTable(0); return false;">Bill No.</a></th>
+      <th><a class="sort-link" id="bill-sort-1" href="#" onclick="sortBillingTable(1); return false;">Sale Date</a></th>
+      <th><a class="sort-link" id="bill-sort-2" href="#" onclick="sortBillingTable(2); return false;">Customer</a></th>
+      <th><a class="sort-link" id="bill-sort-3" href="#" onclick="sortBillingTable(3); return false;">Phone</a></th>
+      <th><a class="sort-link" id="bill-sort-4" href="#" onclick="sortBillingTable(4); return false;">Processed By</a></th>
+      <th><a class="sort-link" id="bill-sort-5" href="#" onclick="sortBillingTable(5); return false;">Total Amount</a></th>
+      <th>Receipt</th>
+    </tr></thead>
+    <tbody>
+      {% for b in billing_records %}
+      <tr>
+        <td><strong>{{ b.Bill_No }}</strong></td>
+        <td>{{ b.SaleDate }}</td>
+        <td>{{ b.CustomerName or '—' }}</td>
+        <td>{{ b.CustomerPhone or '—' }}</td>
+        <td>{{ b.StaffName or '—' }}</td>
+        <td style="font-weight:700;color:var(--success);">&#8377; {{ "%.2f"|format(b.Total_Amount) }}</td>
+        <td>
+          <button class="btn-action primary" style="padding:5px 14px;font-size:0.78rem;"
+                  onclick="openReceipt('{{ b.Bill_No }}')">&#128196; View</button>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+    <div style="text-align:center;padding:48px;color:var(--text-muted);">
+      <div style="font-size:2.5rem;margin-bottom:12px;">🧾</div>
+      <p style="font-weight:600;">No bills recorded yet.</p>
+      <p style="font-size:0.875rem;">Bills appear here after a Pharmacist completes a sale.</p>
+    </div>
+  {% endif %}
+</div>
