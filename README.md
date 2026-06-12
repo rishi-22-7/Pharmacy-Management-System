@@ -1,83 +1,188 @@
+<h1 align="center">🏥 Pulse Pharmacy Management System</h1>
 
-# 🏥 Pulse Pharmacy Management System
+<p align="center">
+  <a href="https://pharmacy-management-system-t54e.onrender.com" target="_blank">
+    <img src="https://img.shields.io/badge/Live-Demo-00C853?style=for-the-badge&logo=render&logoColor=white" alt="Live Demo" />
+  </a>
+  <img src="https://img.shields.io/badge/Backend-Flask-01579B?style=for-the-badge&logo=flask&logoColor=white" alt="Flask" />
+  <img src="https://img.shields.io/badge/Database-MySQL-FF8F00?style=for-the-badge&logo=mysql&logoColor=white" alt="MySQL" />
+  <img src="https://img.shields.io/badge/License-MIT-ECEFF1?style=for-the-badge&logo=open-source-initiative&logoColor=black" alt="License" />
+</p>
 
-A robust, fully normalized relational database system designed to automate pharmacy operations, manage complex inventory lifecycles, and secure sensitive medical and financial data. 
+<p align="center">
+  <strong>A sleek, robust, and responsive web application designed to automate pharmacy inventory, role management, transactions, and real-time shelf stock deductions.</strong>
+</p>
 
-Developed as a comprehensive Database Management Systems (DBMS) lab project, this architecture replaces error-prone manual ledgers with an ACID-compliant MySQL backend.
+---
 
-## ✨ Core Features
+## 🔑 Testing Credentials
 
-* **3NF Relational Architecture:** Highly structured database eliminating data redundancy and preventing insertion, update, and deletion anomalies.
-* **Automated Inventory Triggers:** Smart SQL triggers that automatically deduct physical shelf stock during POS transactions, preventing stockouts and overselling.
-* **Complex Batch Management:** Tracks medicines at the batch level to monitor exact expiration dates and manufacturing details.
-* **Role-Based Access Control (RBAC):** Strict security protocols isolating sensitive supplier and financial data based on user roles (Admin vs. Pharmacist).
-* **Referential Integrity:** Enforced Foreign Key constraints across all transaction and master data tables.
+Use the following credentials to log in and test the live demo:
+
+<table align="center" width="100%">
+  <thead>
+    <tr>
+      <th align="center">Role</th>
+      <th align="center">Staff ID Input</th>
+      <th align="center">Password</th>
+      <th align="left">Access Level & Permissions</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td align="center"><strong>Admin</strong></td>
+      <td align="center"><code>ADM1</code></td>
+      <td align="center"><code>123456</code></td>
+      <td align="left">Full system control, register/remove staff, view site metrics.</td>
+    </tr>
+    <tr>
+      <td align="center"><strong>Manager</strong></td>
+      <td align="center"><code>MGR2</code></td>
+      <td align="center"><code>123456</code></td>
+      <td align="left">Inventory management, vendor logs, and restock procurement.</td>
+    </tr>
+    <tr>
+      <td align="center"><strong>Pharmacist</strong></td>
+      <td align="center"><code>PHR3</code></td>
+      <td align="center"><code>123456</code></td>
+      <td align="left">POS billing interface, customer profiles, doctor registries.</td>
+    </tr>
+  </tbody>
+</table>
+
+---
+
+## ⚡ Core Features
+
+<details open>
+  <summary>🔑 <strong>Dynamic Role-Based Access Control (RBAC)</strong></summary>
+  <br>
+  <ul>
+    <li><strong>Admin (<code>ADM</code>)</strong>: Full system access, registering/removing staff, and financial oversight.</li>
+    <li><strong>Manager (<code>MGR</code>)</strong>: Inventory management, vendor procurement, and replenishment orders.</li>
+    <li><strong>Pharmacist (<code>PHR</code>)</strong>: Point-of-Sale (POS) billing, doctor referrals, and patient records.</li>
+  </ul>
+</details>
+
+<details>
+  <summary>📦 <strong>ACID-Compliant MySQL Database</strong></summary>
+  <br>
+  <ul>
+    <li>Integrated with a cloud-hosted 3NF relational database.</li>
+    <li>Uses transaction safety to prevent data corruption.</li>
+  </ul>
+</details>
+
+<details>
+  <summary>⚡ <strong>Automated SQL Triggers</strong></summary>
+  <br>
+  <ul>
+    <li>Smart triggers automatically adjust physical batch shelf stock upon POS billing transactions to prevent stockouts and overselling.</li>
+  </ul>
+</details>
+
+<details>
+  <summary>🏷️ <strong>Batch & Expiry Control</strong></summary>
+  <br>
+  <ul>
+    <li>Monitor catalog medicines at the batch level to track exact manufacturing and expiration dates.</li>
+  </ul>
+</details>
+
+---
+
+## 🛠️ Technology Stack
+
+<table align="center" width="100%">
+  <tr>
+    <td align="center" width="25%">
+      <strong>Frontend</strong><br>
+      HTML5 / CSS3 / JS<br>
+      (Responsive Sidebar, Glassmorphism)
+    </td>
+    <td align="center" width="25%">
+      <strong>Backend</strong><br>
+      Python / Flask<br>
+      (Modular routes, blueprints)
+    </td>
+    <td align="center" width="25%">
+      <strong>Database</strong><br>
+      MySQL<br>
+      (Hosted on Aiven Cloud)
+    </td>
+    <td align="center" width="25%">
+      <strong>Hosting</strong><br>
+      Render<br>
+      (Automated Web Service)
+    </td>
+  </tr>
+</table>
+
+---
 
 ## 🗄️ Database Architecture
 
-The system consists of 10 interconnected tables, conceptually designed using Chen Notation and logically mapped to resolve all Many-to-Many relationships.
+<details>
+  <summary>📂 <strong>Entity Relationship Schema</strong></summary>
+  <br>
+  <ul>
+    <li><strong>Master Records</strong>: <code>DRUG</code>, <code>DRUG_CATEGORY</code>, <code>SUPPLIER</code>, <code>STAFF</code>, <code>CUSTOMER</code>, <code>DOCTOR</code></li>
+    <li><strong>Transactional & Junction Data</strong>: <code>INVENTORY_BATCH</code>, <code>CUSTOMER_BILL</code>, <code>BILL_ITEMS</code>, <code>RESTOCK_ORDER</code>, <code>RESTOCK_ITEMS</code></li>
+  </ul>
+</details>
 
-### Master Data & Actors
-* `DRUG`: Master catalog of all medicines.
-* `DRUG_CATEGORY`: Classification of medicines (e.g., Analgesics, Antibiotics).
-* `SUPPLIER`: Vendor details for procurement.
-* `STAFF`: Secure employee directory and access management.
-* `CUSTOMER`: Buyer demographics for streamlined checkout.
-* `DOCTOR`: Prescribing physician records.
+---
 
-### Transactions & Inventory
-* `INVENTORY_BATCH`: (Weak Entity) Real-time tracking of physical shelf stock and expiration dates.
-* `CUSTOMER_BILL`: Header table for patient POS transactions.
-* `BILL_ITEMS`: (Junction) Line-item details and quantities for patient sales.
-* `RESTOCK_ORDER`: Header table for vendor procurement.
-* `RESTOCK_ITEMS`: (Junction) Line-item details for restock shipments.
-
-## 🚀 Getting Started
+## 🚀 Local Setup & Installation
 
 ### Prerequisites
-To run this project locally, you will need:
-* MySQL Server (v8.0+)
-* MySQL Workbench (or any preferred SQL client like DBeaver or DataGrip)
+- Python 3.8+
+- MySQL Server 8.0+
 
-### Installation & Setup
+### Step-by-Step Guide
 
-1. **Clone the repository:**
-   git clone [https://github.com/yourusername/pharmacy-management-system.git](https://github.com/yourusername/pharmacy-management-system.git)
+1. **Clone the Repository:**
+   ```bash
+   git clone https://github.com/rishi-22-7/Pharmacy-Management-System.git
+   cd Pharmacy-Management-System
+   ```
 
-2.  **Initialize the Database:**
-    Open your SQL client and execute the `schema.sql` file. This script contains the DDL commands to generate the database, tables, primary keys, and foreign key constraints.
-    SOURCE path/to/schema.sql;
-   
-3.  **Seed the Data:**
-    Execute the `seed.sql` file to populate the database with dummy master data, staff, and inventory batches to test the system.
-   
-    SOURCE path/to/seed.sql;
-   
-4.  **Deploy Triggers & Views (Optional but recommended):**
-    Execute `triggers.sql` to enable automated inventory deductions and `views.sql` to generate pre-compiled financial and low-stock reports.
+2. **Set Up a Virtual Environment:**
+   ```bash
+   python -m venv venv
+   # On Windows:
+   .\venv\Scripts\activate
+   # On macOS/Linux:
+   source venv/bin/activate
+   ```
 
-## 📊 Sample Operations
+3. **Install Dependencies:**
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-**Processing a Sale:**
-When a record is inserted into the `BILL_ITEMS` table, an underlying database trigger fires automatically to locate the corresponding `BatchNo` and `Barcode` in the `INVENTORY_BATCH` table and deducts the `Qty_Sold` from `Qty_In_Stock`.
+4. **Database Configuration:**
+   Configure your database environment variables or edit the default fallback values in `db.py`:
+   - `DB_HOST`: Host address of your MySQL database
+   - `DB_PORT`: Database port (default: `3306`)
+   - `DB_NAME`: Schema name (e.g., `defaultdb` or `pharmacy_db`)
+   - `DB_USER`: Database username
+   - `DB_PASSWORD`: Database password
 
-## 👨‍💻 Author
+5. **Run the Application:**
+   ```bash
+   python app.py
+   ```
+   Open your browser and navigate to `http://127.0.0.1:5000/`.
 
-**Majeti Naga Sai Rishi**
+---
 
-  * Course: CSE 209 (DBMS Lab Project)
-  * Institution: SRM University, AP
+## 👥 Authors
+
+* **Majeti Naga Sai Rishi**
+
+---
 
 ## 📝 License
 
-This project is licensed under the MIT License - see the [LICENSE](https://www.google.com/search?q=LICENSE) file for details.
-
-
-***
-
-### **How to use this:**
-1. Create a new file in your GitHub repository named exactly **`README.md`**.
-2. Paste this entire text block into it.
-3. Make sure to **update the GitHub clone link** under the "Installation & Setup" section with your actual repository URL.
-4. *(Optional)* If you have your SQL code saved in specific files (like `schema.sql` or `triggers.sql`), make sure those filenames match what is in the README, or edit the README to match your actual file structure!
-
+This project is licensed under the MIT License.
