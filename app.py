@@ -31,4 +31,8 @@ register_pharmacist_routes(app)
 register_api_routes(app)
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    import os
+    # Render sets the PORT environment variable automatically.
+    # We must bind to '0.0.0.0' for Render's port scanner to succeed.
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=True)
