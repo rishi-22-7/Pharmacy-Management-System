@@ -1,13 +1,8 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Admin Control Center — Pharmacy</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"/>
-  <link rel="icon" href="{{ url_for('static', filename='images/favicon.png') }}" type="image/png">
+{% extends 'base.html' %}
+
+{% block title %}Admin Control Center — Pharmacy{% endblock %}
+
+{% block extra_styles %}
   <style>
     .sort-link { color: var(--text-muted); text-decoration: none; font-weight: 700; }
     .sort-link:hover, .sort-link.active { color: var(--brand); }
@@ -28,18 +23,16 @@
     .btn-xs.cancel  { background: #FED7D7; color: var(--danger); margin-left: 3px; }
     .btn-edit-price { padding: 3px 10px; font-size: 0.75rem; background: rgba(43,108,176,0.08); color: var(--brand); border: 1px solid rgba(43,108,176,0.3); border-radius: 5px; cursor: pointer; margin-top: 4px; }
   </style>
-</head>
-<body>
+{% endblock %}
 
-<nav class="dash-nav">
-  <div class="nav-brand">🛡️ Admin Control Center</div>
-  <div class="nav-user">
-    <span>Logged in as <strong>{{ name }}</strong></span>
-    <a href="{{ url_for('profile') }}" class="btn-profile">👤 My Profile</a>
-    <a href="{{ url_for('logout') }}" class="btn-logout">⏻ Logout</a>
-  </div>
-</nav>
+{% block nav_brand %}🛡️ Admin Control Center{% endblock %}
+{% block logged_in_user %}{{ name }}{% endblock %}
+{% block nav_links %}
+  <a href="{{ url_for('profile') }}" class="btn-profile">👤 My Profile</a>
+  <a href="{{ url_for('logout') }}" class="btn-logout">⏻ Logout</a>
+{% endblock %}
 
+{% block body %}
 <!-- Tab Bar -->
 <div class="admin-tabs">
   <button id="tab-staff"     class="tab-btn" onclick="showTab('staff')">👤 Manage Staff</button>
@@ -405,7 +398,7 @@
   </div><!-- /inventory -->
 
 
-  <!-- ═══════════ TAB 4: BILLING RECORDS ═══════════ -->
+  <!-- ═══════════ TAB 5: BILLING RECORDS ═══════════ -->
   <div id="section-billing" class="tab-section" style="display:none;">
 
     <!-- All Time Analytics Cards -->
@@ -477,65 +470,10 @@
 
 </div><!-- /dash-body -->
 
+{% include 'partials/receipt_modal.html' %}
+{% endblock %}
 
-<!-- ═══ Receipt Modal ═══ -->
-<div id="receipt-modal" style="display:none;position:fixed;inset:0;z-index:999;background:rgba(0,0,0,0.45);backdrop-filter:blur(3px);padding:24px;overflow-y:auto;">
-  <div class="receipt-card" style="max-width:560px;margin:40px auto;background:#fff;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,0.18);overflow:hidden;">
-    <!-- Header -->
-    <div style="background:linear-gradient(135deg,var(--brand),#2558A0);color:#fff;padding:24px 28px;">
-      <div style="font-size:1.5rem;font-weight:800;letter-spacing:-0.02em;">&#128138; Pulse Pharmacy</div>
-      <div style="font-size:0.85rem;opacity:0.85;margin-top:4px;">Official Sale Receipt</div>
-    </div>
-    <!-- Meta -->
-    <div style="padding:22px 28px;border-bottom:1px solid var(--border);display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-      <div>
-        <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-muted);">Bill No.</div>
-        <div id="r-bill-no" style="font-weight:800;font-size:1.05rem;color:var(--brand);"></div>
-      </div>
-      <div>
-        <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-muted);">Date</div>
-        <div id="r-date" style="font-weight:600;"></div>
-      </div>
-      <div>
-        <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-muted);">Customer Name</div>
-        <div id="r-customer-name" style="font-weight:600;"></div>
-      </div>
-      <div>
-        <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-muted);">Customer Phone</div>
-        <div id="r-customer-phone" style="font-weight:600;"></div>
-      </div>
-      <div style="grid-column:1/-1;">
-        <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-muted);">Processed By</div>
-        <div id="r-staff-name" style="font-weight:600;"></div>
-      </div>
-    </div>
-    <!-- Items -->
-    <div style="padding:18px 28px;">
-      <table style="width:100%;border-collapse:collapse;font-size:0.875rem;">
-        <thead>
-          <tr style="border-bottom:2px solid var(--border);">
-            <th style="text-align:left;padding:8px 0;font-size:0.7rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-muted);">Medicine</th>
-            <th style="text-align:center;padding:8px 0;font-size:0.7rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-muted);">Qty</th>
-            <th style="text-align:right;padding:8px 0;font-size:0.7rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-muted);">Unit</th>
-            <th style="text-align:right;padding:8px 0;font-size:0.7rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-muted);">Total</th>
-          </tr>
-        </thead>
-        <tbody id="r-items"></tbody>
-      </table>
-    </div>
-    <!-- Total -->
-    <div style="padding:16px 28px 20px;border-top:2px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
-      <span style="font-weight:700;font-size:1rem;">Grand Total</span>
-      <span id="r-total" style="font-weight:800;font-size:1.25rem;color:var(--success);"></span>
-    </div>
-    <!-- Actions -->
-    <div style="padding:0 28px 24px;display:flex;gap:12px;">
-      <button onclick="window.print()" class="btn-action primary" style="flex:1;">&#128424; Print</button>
-      <button onclick="closeReceipt()" class="btn-action secondary" style="flex:1;">&#10005; Close</button>
-    </div>
-  </div>
-</div>
-
+{% block extra_scripts %}
 <script>
   const ADMIN_TABS = ['staff', 'suppliers', 'catalog', 'inventory', 'billing'];
 
@@ -623,46 +561,5 @@
       cell.querySelector('.edit-price-btn').style.display = '';
     });
   });
-
-  // ── Receipt Modal ──
-  function openReceipt(billNo) {
-    fetch(`/api/get_bill/${billNo}`)
-      .then(r => r.json())
-      .then(data => {
-        if (!data.success) { alert('Could not load receipt: ' + data.error); return; }
-        const b = data.bill;
-        document.getElementById('r-bill-no').textContent       = b.Bill_No;
-        document.getElementById('r-date').textContent          = b.SaleDate || '—';
-        document.getElementById('r-customer-name').textContent = b.Customer_Name  || '—';
-        document.getElementById('r-customer-phone').textContent= b.Customer_Phone || '—';
-        document.getElementById('r-staff-name').textContent    = b.Staff_Name     || '—';
-        document.getElementById('r-total').textContent         = `\u20b9 ${parseFloat(b.Total_Amount).toFixed(2)}`;
-
-        let rows = '';
-        data.items.forEach(item => {
-          rows += `
-            <tr style="border-bottom:1px dashed var(--border);">
-              <td style="padding:10px 0;font-weight:600;">${item.drug_name}</td>
-              <td style="padding:10px 0;text-align:center;">${item.Qty_Sold}</td>
-              <td style="padding:10px 0;text-align:right;color:var(--text-muted);">\u20b9${parseFloat(item.Unit_Selling_Price).toFixed(2)}</td>
-              <td style="padding:10px 0;text-align:right;font-weight:700;">\u20b9${parseFloat(item.line_total).toFixed(2)}</td>
-            </tr>`;
-        });
-        document.getElementById('r-items').innerHTML = rows || `<tr><td colspan="4" style="padding:20px;text-align:center;color:var(--text-muted);">No items found.</td></tr>`;
-        document.getElementById('receipt-modal').style.display = 'block';
-      })
-      .catch(err => alert('Network error: ' + err));
-  }
-
-  function closeReceipt() {
-    document.getElementById('receipt-modal').style.display = 'none';
-  }
-
-  // Close modal on backdrop click
-  document.getElementById('receipt-modal').addEventListener('click', function(e) {
-    if (e.target === this) closeReceipt();
-  });
 </script>
-
-</body>
-</html>
+{% endblock %}

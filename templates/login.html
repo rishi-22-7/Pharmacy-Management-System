@@ -1,20 +1,9 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Secure staff login portal for Pulse Pharmacy Management System." />
-  <title>Login — Pulse Pharmacy</title>
+{% extends 'base.html' %}
 
-  <!-- Google Fonts: Inter -->
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="icon" href="{{ url_for('static', filename='images/favicon.png') }}" type="image/png">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+{% block title %}Login — Pulse Pharmacy{% endblock %}
+{% block description %}Secure staff login portal for Pulse Pharmacy Management System.{% endblock %}
 
-  <!-- Design System CSS -->
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
-
+{% block extra_styles %}
   <style>
     /* Password field wrapper to position the eye icon */
     .pw-wrapper {
@@ -41,9 +30,11 @@
     }
     .pw-toggle:hover { color: var(--brand); }
   </style>
-</head>
-<body>
+{% endblock %}
 
+{% block navbar %}{% endblock %}
+
+{% block body %}
   <div class="login-page">
     <div class="login-container">
 
@@ -127,19 +118,4 @@
 
     </div>
   </div>
-
-  <script>
-    function togglePw(inputId, btn) {
-      const inp = document.getElementById(inputId);
-      if (inp.type === 'password') {
-        inp.type = 'text';
-        btn.textContent = '⌣';
-      } else {
-        inp.type = 'password';
-        btn.textContent = '👁';
-      }
-    }
-  </script>
-
-</body>
-</html>
+{% endblock %}

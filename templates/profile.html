@@ -1,13 +1,8 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>My Profile — Pharmacy</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"/>
-  <link rel="icon" href="{{ url_for('static', filename='images/favicon.png') }}" type="image/png">
+{% extends 'base.html' %}
+
+{% block title %}My Profile — Pharmacy{% endblock %}
+
+{% block extra_styles %}
   <style>
     /* ── Page wrapper ── */
     .profile-wrapper {
@@ -170,19 +165,16 @@
     .btn-update-pw:hover { opacity: 0.88; transform: translateY(-1px); }
     .btn-update-pw:active { transform: translateY(0); }
   </style>
-</head>
-<body>
+{% endblock %}
 
-<!-- ── Navbar ── -->
-<nav class="dash-nav">
-  <div class="nav-brand">👤 My Profile</div>
-  <div class="nav-user">
-    <span>Logged in as <strong>{{ user.Name if user else '' }}</strong></span>
-    <a href="{{ url_for('dashboard') }}" class="btn-profile">🏠 Dashboard</a>
-    <a href="{{ url_for('logout') }}" class="btn-logout">⏻ Logout</a>
-  </div>
-</nav>
+{% block nav_brand %}👤 My Profile{% endblock %}
+{% block logged_in_user %}{{ user.Name if user else '' }}{% endblock %}
+{% block nav_links %}
+  <a href="{{ url_for('dashboard') }}" class="btn-profile">🏠 Dashboard</a>
+  <a href="{{ url_for('logout') }}" class="btn-logout">⏻ Logout</a>
+{% endblock %}
 
+{% block body %}
 <div class="profile-wrapper">
 
   <!-- Flash messages -->
@@ -290,19 +282,4 @@
   {% endif %}
 
 </div><!-- /profile-wrapper -->
-
-<script>
-  function togglePw(inputId, btn) {
-    const inp = document.getElementById(inputId);
-    if (inp.type === 'password') {
-      inp.type = 'text';
-      btn.textContent = '⌣';
-    } else {
-      inp.type = 'password';
-      btn.textContent = '👁';
-    }
-  }
-</script>
-
-</body>
-</html>
+{% endblock %}

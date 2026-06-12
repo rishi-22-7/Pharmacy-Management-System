@@ -1,13 +1,8 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Billing System</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link rel="icon" href="{{ url_for('static', filename='images/favicon.png') }}" type="image/png">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"/>
+{% extends 'base.html' %}
+
+{% block title %}Billing System{% endblock %}
+
+{% block extra_styles %}
   <style>
     .sort-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
     .sort-bar span { font-size: 0.8rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
@@ -21,18 +16,16 @@
     .my-stat-label { font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:var(--text-muted); margin-bottom:6px; }
     .my-stat-value { font-size:1.8rem; font-weight:800; color:var(--text-primary); }
   </style>
-</head>
-<body>
+{% endblock %}
 
-<nav class="dash-nav">
-  <div class="nav-brand">Billing System</div>
-  <div class="nav-user">
-    <span>Logged in as <strong>{{ name }}</strong></span>
-    <a href="{{ url_for('profile') }}" class="btn-profile">👤 My Profile</a>
-    <a href="{{ url_for('logout') }}" class="btn-logout">⏻ Logout</a>
-  </div>
-</nav>
+{% block nav_brand %}Billing System{% endblock %}
+{% block logged_in_user %}{{ name }}{% endblock %}
+{% block nav_links %}
+  <a href="{{ url_for('profile') }}" class="btn-profile">👤 My Profile</a>
+  <a href="{{ url_for('logout') }}" class="btn-logout">⏻ Logout</a>
+{% endblock %}
 
+{% block body %}
 <div class="admin-tabs">
   <button id="tab-pos"     class="tab-btn" onclick="showPharmTab('pos')">&#128138; New Bill</button>
   <button id="tab-history" class="tab-btn" onclick="showPharmTab('history')">&#128202; My Sales History</button>
@@ -54,7 +47,6 @@
   <div id="section-pos" class="tab-section">
   <div class="pos-container">
 
-    <!-- ══ LEFT: Medicine Catalog ══ -->
     <!-- ══ LEFT: Medicine Catalog ══ -->
     <div class="pos-left">
 
@@ -212,6 +204,10 @@
 
 </div><!-- /dash-body -->
 
+{% include 'partials/receipt_modal.html' %}
+{% endblock %}
+
+{% block extra_scripts %}
 <script>
   let cart = []; // [{batch, barcode, name, price, qty}]
 
@@ -356,44 +352,7 @@
       btn.textContent = '✅ Complete Sale';
     });
   }
-</script>
 
-<!-- ═══ Receipt Modal ═══ -->
-<div id="receipt-modal" style="display:none;position:fixed;inset:0;z-index:999;background:rgba(0,0,0,0.45);backdrop-filter:blur(3px);padding:24px;overflow-y:auto;">
-  <div style="max-width:560px;margin:40px auto;background:#fff;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,0.18);overflow:hidden;">
-    <div style="background:linear-gradient(135deg,var(--brand),#2558A0);color:#fff;padding:24px 28px;">
-      <div style="font-size:1.5rem;font-weight:800;">&#128138; Pulse Pharmacy</div>
-      <div style="font-size:0.85rem;opacity:0.85;margin-top:4px;">Official Sale Receipt</div>
-    </div>
-    <div style="padding:22px 28px;border-bottom:1px solid var(--border);display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-      <div><div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;color:var(--text-muted);">Bill No.</div><div id="r-bill-no" style="font-weight:800;color:var(--brand);"></div></div>
-      <div><div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;color:var(--text-muted);">Date</div><div id="r-date" style="font-weight:600;"></div></div>
-      <div><div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;color:var(--text-muted);">Customer</div><div id="r-customer-name" style="font-weight:600;"></div></div>
-      <div><div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;color:var(--text-muted);">Phone</div><div id="r-customer-phone" style="font-weight:600;"></div></div>
-    </div>
-    <div style="padding:18px 28px;">
-      <table style="width:100%;border-collapse:collapse;font-size:0.875rem;">
-        <thead><tr style="border-bottom:2px solid var(--border);">
-          <th style="text-align:left;padding:8px 0;font-size:0.7rem;text-transform:uppercase;color:var(--text-muted);">Medicine</th>
-          <th style="text-align:center;padding:8px 0;font-size:0.7rem;text-transform:uppercase;color:var(--text-muted);">Qty</th>
-          <th style="text-align:right;padding:8px 0;font-size:0.7rem;text-transform:uppercase;color:var(--text-muted);">Unit</th>
-          <th style="text-align:right;padding:8px 0;font-size:0.7rem;text-transform:uppercase;color:var(--text-muted);">Total</th>
-        </tr></thead>
-        <tbody id="r-items"></tbody>
-      </table>
-    </div>
-    <div style="padding:16px 28px 20px;border-top:2px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
-      <span style="font-weight:700;">Grand Total</span>
-      <span id="r-total" style="font-weight:800;font-size:1.25rem;color:var(--success);"></span>
-    </div>
-    <div style="padding:0 28px 24px;display:flex;gap:12px;">
-      <button onclick="window.print()" class="btn-action primary" style="flex:1;">&#128424; Print</button>
-      <button onclick="closeReceipt()" class="btn-action secondary" style="flex:1;">&#10005; Close</button>
-    </div>
-  </div>
-</div>
-
-<script>
   // ── Tab switching ────────────────────────────
   function showPharmTab(name) {
     ['pos', 'history'].forEach(t => {
@@ -436,43 +395,5 @@
       badge.style.display        = 'none';
     }
   });
-
-  // ── Receipt Modal ────────────────────────────
-  function openReceipt(billNo) {
-    fetch(`/api/get_bill/${billNo}`)
-      .then(r => r.json())
-      .then(data => {
-        if (!data.success) { alert('Could not load receipt: ' + data.error); return; }
-        const b = data.bill;
-        document.getElementById('r-bill-no').textContent        = b.Bill_No;
-        document.getElementById('r-date').textContent           = b.SaleDate || '—';
-        document.getElementById('r-customer-name').textContent  = b.Customer_Name  || '—';
-        document.getElementById('r-customer-phone').textContent = b.Customer_Phone || '—';
-        document.getElementById('r-total').textContent          = `\u20b9 ${parseFloat(b.Total_Amount).toFixed(2)}`;
-        let rows = '';
-        data.items.forEach(item => {
-          rows += `<tr style="border-bottom:1px dashed var(--border);">
-            <td style="padding:10px 0;font-weight:600;">${item.drug_name}</td>
-            <td style="padding:10px 0;text-align:center;">${item.Qty_Sold}</td>
-            <td style="padding:10px 0;text-align:right;color:var(--text-muted);">\u20b9${parseFloat(item.Unit_Selling_Price).toFixed(2)}</td>
-            <td style="padding:10px 0;text-align:right;font-weight:700;">\u20b9${parseFloat(item.line_total).toFixed(2)}</td>
-          </tr>`;
-        });
-        document.getElementById('r-items').innerHTML = rows || `<tr><td colspan="4" style="padding:20px;text-align:center;color:var(--text-muted);">No items.</td></tr>`;
-        document.getElementById('receipt-modal').style.display = 'block';
-      })
-      .catch(err => alert('Network error: ' + err));
-  }
-
-  function closeReceipt() {
-    document.getElementById('receipt-modal').style.display = 'none';
-  }
-
-  document.getElementById('receipt-modal').addEventListener('click', function(e) {
-    if (e.target === this) closeReceipt();
-  });
 </script>
-
-</body>
-</html>
-
+{% endblock %}

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="{% block description %}Pulse Pharmacy Management System{% endblock %}" />
+  <title>{% block title %}Pulse Pharmacy{% endblock %}</title>
+
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <!-- Design System CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  <link rel="icon" href="{{ url_for('static', filename='images/favicon.png') }}" type="image/png">
+
+  {% block extra_styles %}{% endblock %}
+</head>
+<body>
+
+  {% block navbar %}
+    {% if session.get('staff_id') %}
+      <nav class="dash-nav">
+        <div class="nav-brand">{% block nav_brand %}℞ Pulse Pharmacy{% endblock %}</div>
+        <div class="nav-user">
+          <span>Logged in as <strong>{% block logged_in_user %}{{ session.get('name') }}{% endblock %}</strong></span>
+          {% block nav_links %}{% endblock %}
+        </div>
+      </nav>
+    {% endif %}
+  {% endblock %}
+
+  {% block body %}{% endblock %}
+
+  <script>
+    // Shared helper for toggling password field visibility
+    function togglePw(inputId, btn) {
+      const inp = document.getElementById(inputId);
+      if (inp.type === 'password') {
+        inp.type = 'text';
+        btn.textContent = '⌣';
+      } else {
+        inp.type = 'password';
+        btn.textContent = '👁';
+      }
+    }
+  </script>
+  {% block extra_scripts %}{% endblock %}
+</body>
+</html>
